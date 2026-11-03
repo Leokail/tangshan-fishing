@@ -1,0 +1,1699 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0a2438">
+<title>唐山路南渔情预测 · 鱼口小时级预报</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  html,body { background:#061522; }
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,"PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+    color:#e8f2fa; max-width:520px; margin:0 auto; min-height:100vh;
+    background:linear-gradient(180deg,#0a2438 0%,#0d2f4a 30%,#0a2033 65%,#061522 100%);
+    padding-bottom:48px; position:relative; overflow-x:hidden;
+  }
+  body::before {
+    content:""; position:fixed; inset:0; pointer-events:none; opacity:.5;
+    background:
+      radial-gradient(60% 30% at 20% 8%, rgba(45,212,191,.10), transparent 60%),
+      radial-gradient(50% 25% at 85% 22%, rgba(56,150,220,.12), transparent 60%),
+      radial-gradient(70% 35% at 50% 95%, rgba(245,196,81,.05), transparent 60%);
+  }
+  .wrap { position:relative; padding:0 14px; }
+  /* ---------- 顶栏 ---------- */
+  .topbar { display:flex; align-items:center; justify-content:space-between; padding:16px 2px 10px; }
+  .topbar .loc { display:flex; align-items:center; gap:6px; font-size:17px; font-weight:700; letter-spacing:.5px; }
+  .topbar .loc .pin { font-size:15px; }
+  .topbar .loc .city { background:linear-gradient(90deg,#ffd97a,#f5c451); -webkit-background-clip:text; background-clip:text; color:transparent; }
+  .topbar .right { display:flex; align-items:center; gap:8px; }
+  .topbar .upd { font-size:11px; color:#7ea6c4; text-align:right; line-height:1.5; }
+  .topbar .upd .live { color:#2dd4bf; font-weight:700; }
+  .refresh-btn { flex:none; width:34px; height:34px; border-radius:50%; border:1px solid rgba(120,190,230,.3);
+    background:rgba(255,255,255,.06); color:#9fc3dd; font-size:17px; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; transition:all .2s; }
+  .refresh-btn:active { transform:scale(.88); }
+  .refresh-btn.spin { animation:rot 1s linear infinite; color:#2dd4bf; border-color:rgba(45,212,191,.5); }
+  @keyframes rot { to { transform:rotate(360deg); } }
+  #toast { position:fixed; left:50%; bottom:36px; transform:translateX(-50%) translateY(20px);
+    background:rgba(45,212,191,.92); color:#fff; font-size:12px; padding:9px 16px; border-radius:999px;
+    opacity:0; pointer-events:none; transition:all .3s; z-index:99; max-width:86%; text-align:center;
+    box-shadow:0 6px 20px rgba(0,0,0,.4); font-weight:600; }
+  #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  /* ---------- Hero ---------- */
+  .hero {
+    position:relative; border-radius:20px; padding:20px 18px 18px; overflow:hidden;
+    background:linear-gradient(160deg,rgba(28,68,102,.85),rgba(12,34,54,.9));
+    border:1px solid rgba(120,190,230,.22);
+    box-shadow:0 8px 30px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.08);
+  }
+  .hero .fishbg { position:absolute; top:14px; right:-10px; font-size:44px; opacity:.10; animation:swim 9s ease-in-out infinite; }
+  @keyframes swim { 0%,100%{transform:translateX(0) rotate(-6deg)} 50%{transform:translateX(-16px) rotate(6deg)} }
+  .hero-main { display:flex; align-items:center; gap:18px; }
+  .gauge { position:relative; width:132px; height:132px; flex:none; }
+  .gauge svg { transform:rotate(-90deg); }
+  .gauge .val { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .gauge .val b { font-size:38px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; }
+  .gauge .val span { font-size:10px; color:#9fc3dd; margin-top:4px; letter-spacing:2px; }
+  .hero-info { flex:1; min-width:0; }
+  .rating-badge { display:inline-flex; align-items:center; gap:6px; font-size:15px; font-weight:800; padding:5px 12px; border-radius:999px; margin-bottom:9px; }
+  .hero-info .summary { font-size:13px; line-height:1.75; color:#c8dff0; }
+  .win-chips { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+  .win-chips .wc { font-size:11px; padding:4px 9px; border-radius:8px; background:rgba(245,196,81,.12); border:1px solid rgba(245,196,81,.35); color:#f5c451; font-weight:600; }
+  .save-btn { margin-top:14px; width:100%; padding:11px 0; border-radius:12px; font-size:14px; font-weight:700;
+    color:#ffd97a; background:linear-gradient(135deg,rgba(245,196,81,.18),rgba(45,212,191,.12));
+    border:1px solid rgba(245,196,81,.45); cursor:pointer; transition:all .2s; letter-spacing:1px; }
+  .save-btn:active { transform:scale(.97); }
+  .hero-meta { display:flex; gap:14px; margin-top:14px; padding-top:12px; border-top:1px dashed rgba(255,255,255,.14); font-size:11px; color:#8fb6d2; flex-wrap:wrap; }
+  .hero-meta b { color:#dcecf8; font-weight:600; }
+  /* ---------- 海报弹层 ---------- */
+  .modal { position:fixed; inset:0; background:rgba(2,10,18,.92); z-index:200; display:none;
+    align-items:center; justify-content:center; flex-direction:column; padding:20px; }
+  .modal.show { display:flex; }
+  .modal img { max-width:96%; max-height:78vh; border-radius:14px; box-shadow:0 10px 44px rgba(0,0,0,.6); }
+  .modal-tip { color:#9fc3dd; font-size:12px; margin-top:14px; }
+  .modal-btns { display:flex; gap:12px; margin-top:16px; }
+  .modal-btns button { padding:10px 22px; border-radius:999px; font-size:13px; font-weight:700; cursor:pointer; border:none; }
+  .modal-btns .dl { background:linear-gradient(135deg,#f5c451,#e8a83a); color:#3a2a05; }
+  .modal-btns .cl { background:rgba(255,255,255,.1); color:#c8dff0; border:1px solid rgba(255,255,255,.2)!important; }
+  /* ---------- 通用区块 ---------- */
+  .sec { margin-top:18px; }
+  .sec-title { display:flex; align-items:center; gap:8px; font-size:15px; font-weight:700; margin-bottom:12px; letter-spacing:.5px; }
+  .sec-title::before { content:""; width:4px; height:15px; border-radius:2px; background:linear-gradient(180deg,#f5c451,#2dd4bf); }
+  .sec-title .sub { font-size:10px; color:#6f96b5; font-weight:400; margin-left:auto; letter-spacing:0; }
+  .card { background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.09); border-radius:16px; padding:14px; }
+  /* ---------- 开钓参照 ---------- */
+  .ref-item { display:flex; gap:11px; padding:13px 14px; border-radius:14px; background:rgba(255,255,255,.045); border:1px solid rgba(255,255,255,.09); margin-bottom:10px; }
+  .ref-item:last-child { margin-bottom:0; }
+  .ref-item .no { flex:none; width:26px; height:26px; border-radius:9px; display:flex; align-items:center; justify-content:center; font-size:14px; background:linear-gradient(135deg,rgba(245,196,81,.25),rgba(45,212,191,.18)); border:1px solid rgba(245,196,81,.3); }
+  .ref-item .rt { font-size:13px; font-weight:700; color:#ffd97a; margin-bottom:4px; }
+  .ref-item .rx { font-size:12px; line-height:1.7; color:#b9d3e6; }
+  .ref-item .rx b { color:#fff; }
+  /* ---------- 9日总览 ---------- */
+  .ov-row { display:flex; align-items:center; gap:9px; padding:7px 8px; border-radius:10px; cursor:pointer; transition:background .15s; }
+  .ov-row:active { background:rgba(255,255,255,.06); }
+  .ov-row.sel { background:rgba(45,212,191,.10); box-shadow:inset 0 0 0 1px rgba(45,212,191,.35); }
+  .ov-row .lb { flex:none; width:38px; font-size:12px; color:#a9c8de; font-weight:600; }
+  .ov-row.sel .lb { color:#2dd4bf; }
+  .ov-row .lb .wd { display:block; font-size:11px; color:#6f96b5; font-weight:400; }
+  .ov-row .bar-bg { flex:1; height:14px; border-radius:7px; background:rgba(255,255,255,.07); overflow:hidden; }
+  .ov-row .bar-fg { height:100%; border-radius:7px; transition:width .8s cubic-bezier(.22,1,.36,1); }
+  .ov-row .sc { flex:none; width:34px; text-align:right; font-size:13px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .ov-row .crown { flex:none; font-size:11px; }
+  /* ---------- 日期 chips ---------- */
+  .chips { display:flex; gap:8px; overflow-x:auto; padding:2px 0 6px; scrollbar-width:none; }
+  .chips::-webkit-scrollbar { display:none; }
+  .chip { flex:none; padding:8px 14px; border-radius:12px; font-size:13px; font-weight:600; color:#a9c8de;
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.1); cursor:pointer; transition:all .18s; white-space:nowrap; }
+  .chip .cs { display:block; font-size:11px; font-weight:400; color:#6f96b5; margin-top:2px; }
+  .chip.on { background:linear-gradient(135deg,rgba(45,212,191,.22),rgba(56,150,220,.22)); border-color:rgba(45,212,191,.55); color:#fff; }
+  .chip.on .cs { color:#9fe8dd; }
+  /* ---------- 当日详情 ---------- */
+  .day-head { display:flex; align-items:center; gap:10px; margin-bottom:12px; }
+  .day-head .wicon { font-size:30px; }
+  .day-head .dt { flex:1; min-width:0; }
+  .day-head .dt .d1 { font-size:15px; font-weight:700; }
+  .day-head .dt .d2 { font-size:11px; color:#8fb6d2; margin-top:2px; }
+  .day-head .dscore { text-align:right; }
+  .day-head .dscore b { font-size:24px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .day-head .dscore span { display:block; font-size:10px; color:#8fb6d2; }
+  .factors { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
+  .factor { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:10px 11px; }
+  .factor:last-child { grid-column:1 / -1; }
+  .factor .fh { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:700; color:#d7e9f6; }
+  .factor .fh .fs { margin-left:auto; font-size:11px; font-weight:800; font-variant-numeric:tabular-nums; }
+  .factor .fv { font-size:11px; color:#8fb6d2; margin:5px 0 6px; }
+  .factor .fb { height:5px; border-radius:3px; background:rgba(255,255,255,.08); overflow:hidden; margin-bottom:7px; }
+  .factor .fb i { display:block; height:100%; border-radius:3px; }
+  .factor .fa { font-size:11px; line-height:1.6; color:#a9c8de; }
+  /* ---------- 小时级图表 ---------- */
+  .chart-box { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:12px; padding:12px 8px 8px; }
+  .chart-box svg { display:block; width:100%; height:auto; }
+  .bar { cursor:pointer; transition:opacity .15s; }
+  .bar:hover { opacity:.85; }
+  .bar.dim { opacity:.35; }
+  .bar.picked rect.main { stroke:#fff; stroke-width:1.2; }
+  .hour-detail { margin-top:10px; border-radius:12px; padding:12px 14px; background:rgba(10,32,50,.75); border:1px solid rgba(120,190,230,.25); }
+  .hour-detail .hd-h { display:flex; align-items:baseline; gap:8px; margin-bottom:7px; }
+  .hour-detail .hd-h b { font-size:17px; font-weight:800; }
+  .hour-detail .hd-h .tag { font-size:10px; padding:2px 8px; border-radius:6px; font-weight:700; }
+  .hour-detail .hd-m { display:flex; flex-wrap:wrap; gap:6px 14px; font-size:11px; color:#9fc3dd; margin-bottom:7px; }
+  .hour-detail .hd-m b { color:#e8f2fa; font-weight:600; }
+  .hour-detail .hd-a { font-size:12px; line-height:1.7; color:#c8dff0; }
+  .chart-tip { font-size:10px; color:#6f96b5; text-align:center; margin-top:6px; }
+  /* ---------- 鱼种 ---------- */
+  .sp-row { display:flex; align-items:center; gap:10px; padding:9px 4px; border-bottom:1px dashed rgba(255,255,255,.08); }
+  .sp-row:last-child { border-bottom:none; }
+  .sp-row .sn { flex:none; width:52px; font-size:13px; font-weight:700; }
+  .sp-row .stars { flex:none; width:78px; font-size:12px; letter-spacing:1px; }
+  .sp-row .ss { flex:none; width:34px; font-size:12px; font-weight:800; text-align:right; font-variant-numeric:tabular-nums; }
+  .sp-row .sx { flex:1; font-size:11px; color:#8fb6d2; line-height:1.5; }
+  /* ---------- 页脚 ---------- */
+  .footer { margin-top:22px; padding:14px; border-radius:12px; background:rgba(255,255,255,.03); border:1px solid rgba(255,255,255,.07); }
+  .footer p { font-size:10px; line-height:1.8; color:#5f829e; }
+  .footer .src { color:#7ea6c4; }
+  /* ---------- 台钓鲫鱼精准分析 ---------- */
+  .jy-hero { display:flex; align-items:center; gap:14px; background:linear-gradient(135deg,rgba(245,196,81,.12),rgba(45,212,191,.10));
+    border:1px solid rgba(245,196,81,.35); border-radius:14px; padding:14px 16px; margin-bottom:12px; }
+  .jy-hero .jsc { text-align:center; flex:none; }
+  .jy-hero .jsc b { display:block; font-size:38px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; }
+  .jy-hero .jsc span { font-size:10px; color:#8fb6d2; }
+  .jy-hero .jv { flex:1; min-width:0; }
+  .jy-hero .jv .lv { font-size:19px; font-weight:800; margin-bottom:4px; }
+  .jy-hero .jv .st { font-size:12px; letter-spacing:2px; }
+  .jy-seg { display:flex; align-items:flex-start; gap:10px; padding:7px 0; border-bottom:1px dashed rgba(255,255,255,.07); }
+  .jy-seg:last-child { border-bottom:none; }
+  .jy-seg .rg { flex:none; width:92px; }
+  .jy-seg .rg b { display:block; font-size:12px; color:#ffd97a; }
+  .jy-seg .rg span { font-size:10px; color:#6f96b5; font-variant-numeric:tabular-nums; }
+  .jy-seg .tp { flex:1; font-size:11.5px; line-height:1.6; color:#c8dff0; }
+  .jy-gear { display:grid; grid-template-columns:1fr 1fr; gap:7px; margin-top:4px; }
+  .jy-gear .gi { background:rgba(255,255,255,.04); border:1px solid rgba(255,255,255,.08); border-radius:9px; padding:7px 9px; }
+  .jy-gear .gi i { display:block; font-style:normal; font-size:10px; color:#6f96b5; margin-bottom:2px; }
+  .jy-gear .gi b { font-size:11px; font-weight:600; color:#e8f2fa; line-height:1.4; }
+  .jy-note { font-size:11px; line-height:1.7; color:#a9c8de; padding:5px 0 5px 14px; position:relative; }
+  .jy-note::before { content:'▸'; position:absolute; left:0; color:#2dd4bf; }
+  .aux-card { background:rgba(255,255,255,.035); border:1px solid rgba(255,255,255,.09); border-radius:12px; padding:10px 12px 8px; margin-top:9px; }
+  .aux-hd { display:flex; align-items:baseline; gap:8px; margin-bottom:4px; }
+  .aux-hd b { font-size:13px; color:#f5c451; flex:none; }
+  .aux-hd span:nth-of-type(1) { flex:1; min-width:0; font-size:11.5px; font-weight:700; }
+  .aux-hd .aux-st { flex:none; font-size:10px; letter-spacing:1px; }
+  .aux-win { font-size:10.5px; color:#8fb6d2; margin-top:3px; }
+  .aux-win b { color:#ffd97a; font-weight:700; }
+  .aux-tp { font-size:11px; color:#c8dff0; line-height:1.6; margin-top:3px; padding-top:5px; border-top:1px dashed rgba(255,255,255,.08); }
+  /* ---- 夜钓视图 ---- */
+  .ng-card { background:linear-gradient(180deg,rgba(56,80,140,.22),rgba(20,30,60,.16)); border:1px solid rgba(129,140,248,.22); border-radius:14px; padding:12px 12px 10px; margin-top:9px; }
+  .ng-hd { display:flex; align-items:center; gap:10px; }
+  .ng-hd .ng-sc { flex:none; font-size:30px; font-weight:800; line-height:1; font-variant-numeric:tabular-nums; }
+  .ng-hd .ng-mid { flex:1; min-width:0; }
+  .ng-hd .ng-vd { font-size:13px; font-weight:700; }
+  .ng-hd .ng-st { font-size:11px; letter-spacing:1.5px; margin-top:2px; }
+  .ng-hd .ng-moon { flex:none; text-align:center; font-size:20px; line-height:1.1; }
+  .ng-hd .ng-moon span { display:block; font-size:9.5px; color:#8fb6d2; margin-top:2px; letter-spacing:0; }
+  .ng-meta { display:flex; flex-wrap:wrap; gap:6px; margin-top:8px; }
+  .ng-meta .mi { background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.08); border-radius:8px; padding:4px 8px; font-size:10.5px; color:#c8dff0; }
+  .ng-meta .mi i { font-style:normal; color:#6f96b5; margin-right:3px; }
+  .ng-bar { margin-top:9px; }
+  .ng-bar svg { display:block; width:100%; height:auto; }
+  .ng-win { font-size:11.5px; color:#c8dff0; margin-top:7px; line-height:1.65; }
+  .ng-win b { color:#ffd97a; }
+  .ng-tip { font-size:11px; color:#a9c8de; line-height:1.7; margin-top:6px; padding:6px 0 0; border-top:1px dashed rgba(255,255,255,.09); }
+  .ng-tip div { padding:2px 0 2px 14px; position:relative; }
+  .ng-tip div::before { content:'▸'; position:absolute; left:0; color:#818cf8; }
+  .ng-safe { font-size:11px; color:#f5a3a3; line-height:1.7; margin-top:6px; padding:6px 8px; background:rgba(248,113,113,.08); border:1px solid rgba(248,113,113,.18); border-radius:9px; }
+  /* 钓深与竿长 */
+  .dp-card { background:linear-gradient(180deg,rgba(52,96,120,.22),rgba(18,34,52,.16)); border:1px solid rgba(94,234,212,.20); border-radius:14px; padding:12px 12px 10px; margin-top:9px; }
+  .dp-hd { font-size:14px; color:#e6f4ff; margin-bottom:8px; }
+  .dp-hd b { font-weight:800; }
+  .dp-hint { float:right; font-size:10.5px; color:#7fb6a8; font-weight:400; margin-top:2px; }
+  .dp-lab { font-size:10.5px; color:#6f96b5; margin:6px 0 4px; }
+  .dp-opts { display:flex; gap:6px; flex-wrap:wrap; }
+  .dp-opt, .dp-tab { font-size:11px; padding:5px 10px; border-radius:8px; cursor:pointer; color:#9fc4dc;
+    background:rgba(255,255,255,.05); border:1px solid rgba(255,255,255,.09); user-select:none; }
+  .dp-opt.on, .dp-tab.on { background:rgba(94,234,212,.18); border-color:rgba(94,234,212,.45); color:#7ff0dd; font-weight:700; }
+  .dp-tabs { margin-top:7px; }
+  .dp-tbhead { display:flex; margin-top:10px; padding:0 8px 4px; font-size:10px; color:#5f829e; }
+  .dp-tbhead span:nth-child(1){width:52px;} .dp-tbhead span:nth-child(2){flex:1;} .dp-tbhead span:nth-child(3){width:60px;text-align:right;}
+  .dp-tb { max-height:246px; overflow-y:auto; -webkit-overflow-scrolling:touch; }
+  .dp-row { display:flex; align-items:center; padding:5px 8px; border-radius:7px; font-size:11.5px; }
+  .dp-row:nth-child(odd) { background:rgba(255,255,255,.03); }
+  .dp-row.now { background:rgba(94,234,212,.14); box-shadow:inset 2px 0 0 #5eead4; }
+  .dp-row .dp-t { width:52px; color:#9fc4dc; font-variant-numeric:tabular-nums; }
+  .dp-row .dp-d { flex:1; color:#e6f4ff; }
+  .dp-row .dp-d i { font-style:normal; color:#7fb6a8; margin-left:4px; font-size:10.5px; }
+  .dp-row .dp-r { width:60px; text-align:right; color:#ffd28a; font-weight:700; font-variant-numeric:tabular-nums; }
+  .dp-sum { margin-top:9px; padding:8px 9px; background:rgba(255,255,255,.04); border-radius:9px; }
+  .dp-b { font-size:11px; color:#c8dff0; line-height:1.9; }
+  .dp-b i { font-style:normal; display:inline-block; width:20px; color:#7fb6a8; }
+  .dp-tip { font-size:11px; color:#c8dff0; line-height:1.7; margin-top:7px; }
+  .dp-note { font-size:10px; color:#6f96b5; line-height:1.6; margin-top:7px; padding-top:6px; border-top:1px dashed rgba(255,255,255,.08); }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- 顶栏 -->
+  <div class="topbar">
+    <div class="loc"><span class="pin">📍</span><span class="city">路南 · 渔情预测</span></div>
+    <div class="right">
+      <div class="upd">融创湖岸壹号附近<br>更新于 <span id="updTime"></span></div>
+      <button id="refreshBtn" class="refresh-btn" title="刷新实时数据">⟳</button>
+    </div>
+  </div>
+
+  <!-- 今日总览 Hero -->
+  <div class="hero">
+    <div class="fishbg">🐟</div>
+    <div class="hero-main">
+      <div class="gauge">
+        <svg width="132" height="132" viewBox="0 0 132 132">
+          <defs>
+            <linearGradient id="gg" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0%" stop-color="#f5c451"/><stop offset="100%" stop-color="#2dd4bf"/>
+            </linearGradient>
+          </defs>
+          <circle cx="66" cy="66" r="54" fill="none" stroke="rgba(255,255,255,.09)" stroke-width="11"/>
+          <circle id="gaugeArc" cx="66" cy="66" r="54" fill="none" stroke="url(#gg)" stroke-width="11"
+                  stroke-linecap="round" stroke-dasharray="339.29" stroke-dashoffset="339.29"
+                  style="transition:stroke-dashoffset 1.2s cubic-bezier(.22,1,.36,1)"/>
+        </svg>
+        <div class="val"><b id="gScore">--</b><span>今日鱼情指数</span></div>
+      </div>
+      <div class="hero-info">
+        <div class="rating-badge" id="rBadge"></div>
+        <div class="summary" id="rSummary"></div>
+        <div class="win-chips" id="rWins"></div>
+        <button class="save-btn" id="savePosterBtn">📷 保存日报图</button>
+      </div>
+    </div>
+    <div class="hero-meta" id="rMeta"></div>
+  </div>
+
+  <!-- 开钓参照 -->
+  <div class="sec">
+    <div class="sec-title">开钓参照 <span class="sub">综合气温 · 气压 · 风 · 雨 · 时段</span></div>
+    <div id="refList"></div>
+  </div>
+
+  <!-- 近9日总览 -->
+  <div class="sec">
+    <div class="sec-title">昨天 / 今天 / 未来7天 <span class="sub">点击日期查看当天详情</span></div>
+    <div class="card" id="overview"></div>
+  </div>
+
+  <!-- 日期切换 -->
+  <div class="sec">
+    <div class="chips" id="chips"></div>
+
+    <!-- 当日详情 -->
+    <div class="card" id="dayDetail"></div>
+  </div>
+
+  <!-- 页脚 -->
+  <div class="footer">
+    <p><span class="src">数据说明：</span>气象数据来自 Open-Meteo（唐山市路南区融创湖岸壹号附近，39.58°N, 118.20°E），页面打开时自动拉取最新预报并本地计算；鱼情指数为「气温水温 / 气压趋势 / 风向风力 / 降水 / 云量光照 / 昼夜时段」多因子加权估算模型（0-100 分），仅供参考娱乐。实际鱼口受水情、钓位、饵料、资源影响较大，请结合当地情况作钓，注意防风防滑与用电安全。</p>
+  </div>
+</div>
+<div id="toast"></div>
+<div class="modal" id="posterModal">
+  <img id="posterImg" alt="唐山渔情日报">
+  <div class="modal-tip">长按图片保存到相册 · 或点下面按钮下载</div>
+  <div class="modal-btns">
+    <button class="dl" id="posterDl">⬇️ 下载图片</button>
+    <button class="cl" id="posterClose">关闭</button>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   唐山渔情预测 H5 —— 实时数据版
+   1. 页面加载/每30分钟/回到前台时，自动从 Open-Meteo 拉取最新逐小时气象数据
+   2. 鱼情指数在浏览器本地按多因子模型实时计算，无需后端
+   3. 断网或接口异常时，自动降级展示页面内置的快照数据
+   ============================================================ */
+var INJECTED = {"city":"唐山市","now":"2026-11-03 20:36","now_hour":20,"days":[{"date":"2026-11-01","label":"昨天","weekday":"周日","is_today":false,"is_past":true,"score":76,"rating":["A","宜钓","综合鱼口偏好，值得出钓"],"weather":["毛毛雨","🌦️"],"tmax":17.0,"tmin":6.2,"tmean":11.0,"wind_max":6.1,"wind_level":4,"wind_dir":"西北风","rain_sum":0.1,"cloud_mean":59,"hum_mean":60,"press_delta":3.9,"sunrise":"06:35","sunset":"17:06","best_windows":[{"start":"05:00","end":"07:00","score":78,"label":"05:00-07:00"},{"start":"14:00","end":"16:00","score":72,"label":"14:00-16:00"},{"start":"17:00","end":"19:00","score":79,"label":"17:00-19:00"}],"factors":[{"key":"temp","name":"气温水温","icon":"🌡️","score":80,"value":"6.2~17.0℃ · 均11.0℃","advice":"温度偏凉，鱼口平稳，早晚集中在浅水"},{"key":"press","name":"气压趋势","icon":"📊","score":45,"value":"全日+3.9 hPa","advice":"气压快速上升，鱼难开口，建议守早口或改日"},{"key":"wind","name":"风向风力","icon":"💨","score":76,"value":"最大4级 · 西北风","advice":"风浪渐大，宜钓背风湾，加大铅坠抗流"},{"key":"rain","name":"降水","icon":"🌧️","score":90,"value":"0.1 mm","advice":"小雨天气，溶氧充足，鱼口偏好"},{"key":"cloud","name":"云量光照","icon":"⛅","score":88,"value":"平均云量59%","advice":"多云/阴天，弱光环境鱼大胆，鱼口偏好"}],"species":[{"name":"鲫鱼","score":55,"stars":2,"note":"耐低温，秋末仍稳，红虫饵效佳"},{"name":"鲤鱼","score":49,"stars":2,"note":"秋季囤脂，食量大，玉米薯香常连口"},{"name":"翘嘴","score":46,"stars":2,"note":"昼伏夜出，傍晚亮片/拟饵效果好"},{"name":"黄颡鱼","score":46,"stars":2,"note":"喜暗，夜间或阴天守河边缓流"},{"name":"草鱼","score":32,"stars":1,"note":"喜暖，降温后转深水，宜守发酵饵"},{"name":"鲢鳙","score":30,"stars":1,"note":"喜高温，秋末活性低，需晴暖午间浮钓"}],"wtemp_mean":13.0,"juyu":{"score":76,"stars":4,"verdict":"鲫口偏好，值得出钓","segments":[{"name":"早口","range":"05:00-08:00","tip":"鲫鱼靠边觅食，钓浅滩水草边，腥香饵+酒米打窝，抓下顿"},{"name":"上午","range":"08:00-11:00","tip":"口渐稀，可钓深浅交界，少量补窝守钓"},{"name":"午间","range":"11:00-14:00","tip":"停口时段，钓深水遮阴或歇竿，避开强光"},{"name":"下午","range":"14:00-17:00","tip":"口回升，逐步向浅滩移竿，拉饵诱钓结合"},{"name":"晚口","range":"17:00-20:00","tip":"全天黄金窗口，鲫鱼集群靠边，拉饵抽频率"},{"name":"夜间","range":"20:00-05:00","tip":"夏季可钓，秋冬夜间停口，收竿休息"}],"gear":{"line":"主线0.8 + 子线0.4","hook":"袖钩4号","bait":"腥香商品饵 / 蚯蚓，酒米打窝","depth":"钓深1.5-2.5米，水草边优先","tone":"腥香各半","adjust":"调四钓二，抓下顿半目"},"notes":["微风适宜：溶氧足，食物聚下风口，优先下风口1-2米"],"hours":[68,66,65,67,67,82,81,79,77,74,72,71,75,74,75,77,76,82,76,76,71,68,66,66]},"carp":{"score":69,"stars":3,"verdict":"鲤口平平，早晚碰碰运气","strategy":"鲤鱼趋温：深浅交界打窝守钓，玉米薯香","best_windows":[{"start":"05:00","end":"07:00","score":70,"label":"05:00-07:00"},{"start":"17:00","end":"19:00","score":74,"label":"17:00-19:00"}],"hours":[60,56,56,58,58,69,70,67,66,70,68,68,68,68,69,71,70,75,73,72,68,66,63,64]},"catfish":{"score":68,"stars":3,"verdict":"鲶口平平，后半夜试试","strategy":"鲶鱼活性低：仅傍晚后短窗口，鸡肝逗钓","best_windows":[{"start":"20:00","end":"22:00","score":72,"label":"20:00-22:00"},{"start":"22:00","end":"00:00","score":74,"label":"22:00-00:00"}],"hours":[74,67,63,60,58,63,64,59,53,57,55,56,56,56,56,58,58,63,65,69,71,72,73,75]},"hours":[{"h":0,"score":57,"temp":7.8,"wind":3.5,"wdir":"东风","wlv":3,"rain":0.1,"wtemp":11.2,"press_d":0.0,"cloud":100,"hum":88},{"h":1,"score":53,"temp":8.2,"wind":2.4,"wdir":"东南风","wlv":2,"rain":0.0,"wtemp":11.5,"press_d":0.0,"cloud":99,"hum":88},{"h":2,"score":52,"temp":7.5,"wind":1.8,"wdir":"北风","wlv":2,"rain":0.0,"wtemp":11.1,"press_d":0.0,"cloud":99,"hum":93},{"h":3,"score":55,"temp":7.1,"wind":2.2,"wdir":"北风","wlv":2,"rain":0.0,"wtemp":10.9,"press_d":-1.1,"cloud":95,"hum":94},{"h":4,"score":52,"temp":6.6,"wind":2.4,"wdir":"北风","wlv":2,"rain":0.0,"wtemp":10.6,"press_d":-0.3,"cloud":88,"hum":94},{"h":5,"score":79,"temp":6.2,"wind":1.4,"wdir":"西北风","wlv":1,"rain":0.0,"wtemp":10.4,"press_d":-1.4,"cloud":98,"hum":94},{"h":6,"score":77,"temp":6.6,"wind":2.9,"wdir":"西北风","wlv":2,"rain":0.0,"wtemp":10.6,"press_d":0.0,"cloud":91,"hum":91},{"h":7,"score":74,"temp":6.6,"wind":3.7,"wdir":"西风","wlv":3,"rain":0.0,"wtemp":10.6,"press_d":0.5,"cloud":83,"hum":91},{"h":8,"score":65,"temp":8.1,"wind":3.8,"wdir":"西风","wlv":3,"rain":0.0,"wtemp":11.4,"press_d":1.4,"cloud":95,"hum":87},{"h":9,"score":70,"temp":10.1,"wind":3.8,"wdir":"西风","wlv":3,"rain":0.0,"wtemp":12.5,"press_d":1.3,"cloud":95,"hum":78},{"h":10,"score":70,"temp":12.1,"wind":4.7,"wdir":"西风","wlv":3,"rain":0.0,"wtemp":13.6,"press_d":0.5,"cloud":98,"hum":68},{"h":11,"score":66,"temp":14.1,"wind":5.7,"wdir":"西风","wlv":4,"rain":0.0,"wtemp":14.7,"press_d":-0.5,"cloud":98,"hum":50},{"h":12,"score":65,"temp":15.4,"wind":6.1,"wdir":"西北风","wlv":4,"rain":0.0,"wtemp":15.4,"press_d":-1.3,"cloud":88,"hum":37},{"h":13,"score":65,"temp":15.8,"wind":6.0,"wdir":"西北风","wlv":4,"rain":0.0,"wtemp":15.6,"press_d":-1.2,"cloud":91,"hum":35},{"h":14,"score":72,"temp":16.6,"wind":5.6,"wdir":"西北风","wlv":4,"rain":0.0,"wtemp":16.1,"press_d":-1.2,"cloud":51,"hum":33},{"h":15,"score":71,"temp":16.9,"wind":6.0,"wdir":"西北风","wlv":4,"rain":0.0,"wtemp":16.2,"press_d":-0.5,"cloud":39,"hum":27},{"h":16,"score":65,"temp":16.4,"wind":5.5,"wdir":"西北风","wlv":4,"rain":0.0,"wtemp":16.0,"press_d":0.5,"cloud":0,"hum":27},{"h":17,"score":82,"temp":14.8,"wind":4.5,"wdir":"西北风","wlv":3,"rain":0.0,"wtemp":15.1,"press_d":1.4,"cloud":0,"hum":32},{"h":18,"score":76,"temp":13.4,"wind":4.8,"wdir":"西北风","wlv":3,"rain":0.0,"wtemp":14.3,"press_d":2.1,"cloud":0,"hum":37},{"h":19,"score":76,"temp":12.6,"wind":4.8,"wdir":"西北风","wlv":3,"rain":0.0,"wtemp":13.9,"press_d":2.6,"cloud":0,"hum":38},{"h":20,"score":67,"temp":11.3,"wind":3.8,"wdir":"西北风","wlv":3,"rain":0.0,"wtemp":13.2,"press_d":2.9,"cloud":0,"hum":41},{"h":21,"score":67,"temp":10.4,"wind":3.9,"wdir":"北风","wlv":3,"rain":0.0,"wtemp":12.7,"press_d":3.0,"cloud":0,"hum":43},{"h":22,"score":67,"temp":10.2,"wind":4.3,"wdir":"北风","wlv":3,"rain":0.0,"wtemp":12.6,"press_d":2.3,"cloud":0,"hum":39},{"h":23,"score":50,"temp":9.8,"wind":4.4,"wdir":"东北风","wlv":3,"rain":0.0,"wtemp":12.3,"press_d":1.2,"cloud":0,"hum":38}]},{"date":"2026-11-02","label":"今天","weekday":"周一","is_today":true,"is_past":false,"score":77,"rating":["A","宜钓","综合鱼口偏好，值得出钓"],"weather":["晴间多云","🌤️"],"tmax":16.6,"tmin":4.8,"tmean":10.4,"wind_max":4.1,"wind_level":3,"wind_dir":"西风","rain_sum":0.0,"cloud_mean":2,"hum_mean":50,"press_delta":0.3,"sunrise":"06:36","sunset":"17:04","best_windows":[{"start":"14:00","end":"16:00","score":72,"label":"14:00-16:00"},{"start":"17:00","end":"19:00","score":81,"label":"17:00-19:00"},{"start":"19:00","end":"21:00","score":74,"label":"19:00-21:00"}],"factors":[{"key":"temp","name":"气温水温","icon":"🌡️","score":80,"value":"4.8~16.6℃ · 均10.4℃","advice":"温度偏凉，鱼口平稳，早晚集中在浅水"},{"key":"press","name":"气压趋势","icon":"📊","score":74,"value":"全日+0.3 hPa","advice":"气压平稳，鱼口正常，按常规策略作钓"},{"key":"wind","name":"风向风力","icon":"💨","score":90,"value":"最大3级 · 西风","advice":"微风轻浪，最佳钓风，抛竿顺畅溶氧足"},{"key":"rain","name":"降水","icon":"🌧️","score":66,"value":"无降水","advice":"无降水，晴天鱼口靠早晚，午间可歇"},{"key":"cloud","name":"云量光照","icon":"⛅","score":70,"value":"平均云量2%","advice":"强光晴天，鱼警惕性高，宜钓深水阴影"}],"species":[{"name":"鲫鱼","score":53,"stars":2,"note":"耐低温，秋末仍稳，红虫饵效佳"},{"name":"鲤鱼","score":47,"stars":2,"note":"秋季囤脂，食量大，玉米薯香常连口"},{"name":"翘嘴","score":44,"stars":1,"note":"昼伏夜出，傍晚亮片/拟饵效果好"},{"name":"黄颡鱼","score":44,"stars":1,"note":"喜暗，夜间或阴天守河边缓流"},{"name":"草鱼","score":30,"stars":1,"note":"喜暖，降温后转深水，宜守发酵饵"},{"name":"鲢鳙","score":30,"stars":1,"note":"喜高温，秋末活性低，需晴暖午间浮钓"}],"wtemp_mean":12.4,"juyu":{"score":76,"stars":4,"verdict":"鲫口偏好，值得出钓","segments":[{"name":"早口","range":"05:00-08:00","tip":"鲫鱼靠边觅食，钓浅滩水草边，腥香饵+酒米打窝，抓下顿"},{"name":"上午","range":"08:00-11:00","tip":"口渐稀，可钓深浅交界，少量补窝守钓"},{"name":"午间","range":"11:00-14:00","tip":"停口时段，钓深水遮阴或歇竿，避开强光"},{"name":"下午","range":"14:00-17:00","tip":"口回升，逐步向浅滩移竿，拉饵诱钓结合"},{"name":"晚口","range":"17:00-20:00","tip":"全天黄金窗口，鲫鱼集群靠边，拉饵抽频率"},{"name":"夜间","range":"20:00-05:00","tip":"夏季可钓，秋冬夜间停口，收竿休息"}],"gear":{"line":"主线0.8 + 子线0.4","hook":"袖钩4号","bait":"腥香商品饵 / 蚯蚓，酒米打窝","depth":"钓深1.5-2.5米，水草边优先","tone":"腥香各半","adjust":"调四钓二，抓下顿半目"},"notes":["微风适宜：溶氧足，食物聚下风口，优先下风口1-2米"],"hours":[64,65,65,65,57,71,71,72,77,74,72,71,78,78,78,79,82,79,79,79,74,71,69,66]},"carp":{"score":71,"stars":3,"verdict":"鲤口平平，早晚碰碰运气","strategy":"鲤鱼趋温：深浅交界打窝守钓，玉米薯香","best_windows":[{"start":"14:00","end":"16:00","score":74,"label":"14:00-16:00"},{"start":"16:00","end":"18:00","score":76,"label":"16:00-18:00"}],"hours":[55,56,56,56,59,68,70,70,66,63,68,68,70,72,73,74,76,77,75,74,70,68,58,56]},"catfish":{"score":66,"stars":3,"verdict":"鲶口平平，后半夜试试","strategy":"鲶鱼活性低：仅傍晚后短窗口，鸡肝逗钓","best_windows":[{"start":"18:00","end":"20:00","score":69,"label":"18:00-20:00"},{"start":"20:00","end":"22:00","score":74,"label":"20:00-22:00"}],"hours":[68,67,63,59,58,62,64,61,53,50,55,57,57,58,59,60,63,65,67,71,73,74,68,68]},"hours":[{"h":0,"score":50,"temp":9.0,"wind":2.8,"wdir":"东北风","wlv":2,"rain":0.0,"wtemp":11.6,"press_d":0.5,"cloud":0,"hum":40},{"h":1,"score":53,"temp":7.9,"wind":4.1,"wdir":"东风","wlv":3,"rain":0.0,"wtemp":11.0,"press_d":0.1,"cloud":0,"hum":46},{"h":2,"score":53,"temp":7.1,"wind":4.1,"wdir":"东风","wlv":3,"rain":0.0,"wtemp":10.6,"press_d":0.3,"cloud":0,"hum":54},{"h":3,"score":53,"temp":6.4,"wind":3.8,"wdir":"东风","wlv":3,"rain":0.0,"wtemp":10.2,"press_d":0.2,"cloud":0,"hum":58},{"h":4,"score":48,"temp":5.8,"wind":3.6,"wdir":"东风","wlv":3,"rain":0.0,"wtemp":9.9,"press_d":0.4,"cloud":29,"hum":61},{"h":5,"score":71,"temp":5.3,"wind":3.9,"wdir":"东风","wlv":3,"rain":0.0,"wtemp":9.6,"press_d":0.3,"cloud":11,"hum":64},{"h":6,"score":71,"temp":5.0,"wind":4.0,"wdir":"东风","wlv":3,"rain":0.0,"wtemp":9.4,"press_d":0.4,"cloud":0,"hum":68},{"h":7,"score":71,"temp":4.9,"wind":4.1,"wdir":"东风","wlv":3,"rain":0.0,"wtemp":9.4,"press_d":0.0,"cloud":0,"hum":69},{"h":8,"score":65,"temp":6.4,"wind":3.7,"wdir":"东北风","wlv":3,"rain":0.0,"wtemp":10.2,"press_d":0.7,"cloud":0,"hum":64},{"h":9,"score":65,"temp":9.0,"wind":2.5,"wdir":"东北风","wlv":2,"rain":0.0,"wtemp":11.6,"press_d":0.6,"cloud":0,"hum":55},{"h":10,"score":69,"temp":11.8,"wind":1.3,"wdir":"东北风","wlv":1,"rain":0.0,"wtemp":13.2,"press_d":0.5,"cloud":0,"hum":51},{"h":11,"score":65,"temp":14.1,"wind":0.2,"wdir":"西南风","wlv":0,"rain":0.0,"wtemp":14.4,"press_d":-0.5,"cloud":0,"hum":50},{"h":12,"score":66,"temp":15.6,"wind":2.4,"wdir":"西风","wlv":2,"rain":0.0,"wtemp":15.3,"press_d":-1.4,"cloud":0,"hum":46},{"h":13,"score":68,"temp":16.4,"wind":4.0,"wdir":"西风","wlv":3,"rain":0.0,"wtemp":15.7,"press_d":-2.2,"cloud":0,"hum":36},{"h":14,"score":73,"temp":16.6,"wind":4.1,"wdir":"西风","wlv":3,"rain":0.0,"wtemp":15.8,"press_d":-2.4,"cloud":0,"hum":31},{"h":15,"score":72,"temp":16.4,"wind":3.8,"wdir":"西风","wlv":3,"rain":0.0,"wtemp":15.7,"press_d":-1.7,"cloud":0,"hum":29},{"h":16,"score":72,"temp":15.7,"wind":3.7,"wdir":"西风","wlv":3,"rain":0.0,"wtemp":15.3,"press_d":-0.6,"cloud":0,"hum":30},{"h":17,"score":84,"temp":14.0,"wind":2.5,"wdir":"西风","wlv":2,"rain":0.0,"wtemp":14.4,"press_d":0.1,"cloud":0,"hum":35},{"h":18,"score":78,"temp":12.5,"wind":2.0,"wdir":"西风","wlv":2,"rain":0.0,"wtemp":13.6,"press_d":0.8,"cloud":0,"hum":42},{"h":19,"score":78,"temp":11.6,"wind":1.1,"wdir":"西风","wlv":1,"rain":0.0,"wtemp":13.1,"press_d":1.0,"cloud":0,"hum":47},{"h":20,"score":70,"temp":10.6,"wind":1.6,"wdir":"西南风","wlv":1,"rain":0.0,"wtemp":12.5,"press_d":1.3,"cloud":0,"hum":51},{"h":21,"score":66,"temp":9.7,"wind":1.5,"wdir":"南风","wlv":1,"rain":0.0,"wtemp":12.0,"press_d":1.0,"cloud":0,"hum":55},{"h":22,"score":66,"temp":9.4,"wind":1.3,"wdir":"南风","wlv":1,"rain":0.0,"wtemp":11.9,"press_d":0.9,"cloud":0,"hum":55},{"h":23,"score":51,"temp":9.2,"wind":1.8,"wdir":"西南风","wlv":2,"rain":0.0,"wtemp":11.7,"press_d":0.6,"cloud":0,"hum":58}]},{"date":"2026-11-03","label":"周二","weekday":"周二","is_today":false,"is_past":false,"score":78,"rating":["A","宜钓","综合鱼口偏好，值得出钓"],"weather":["多云","⛅"],"tmax":18.8,"tmin":5.7,"tmean":11.6,"wind_max":4.3,"wind_level":3,"wind_dir":"东南风","rain_sum":0.0,"cloud_mean":6,"hum_mean":63,"press_delta":0.2,"sunrise":"06:37","sunset":"17:03","best_windows":[{"start":"05:00","end":"07:00","score":76,"label":"05:00-07:00"},{"start":"14:00","end":"16:00","score":74,"label":"14:00-16:00"},{"start":"17:00","end":"19:00","score":82,"label":"17:00-19:00"}],"factors":[{"key":"temp","name":"气温水温","icon":"🌡️","score":80,"value":"5.7~18.8℃ · 均11.6℃","advice":"温度偏凉，鱼口平稳，早晚集中在浅水"},{"key":"press","name":"气压趋势","icon":"📊","score":74,"value":"全日+0.2 hPa","advice":"气压平稳，鱼口正常，按常规策略作钓"},{"key":"wind","name":"风向风力","icon":"💨","score":90,"value":"最大3级 · 东南风","advice":"微风轻浪，最佳钓风，抛竿顺畅溶氧足"},{"key":"rain","name":"降水","icon":"🌧️","score":66,"value":"无降水","advice":"无降水，晴天鱼口靠早晚，午间可歇"},{"key":"cloud","name":"云量光照","icon":"⛅","score":70,"value":"平均云量6%","advice":"强光晴天，鱼警惕性高，宜钓深水阴影"}],"species":[{"name":"鲫鱼","score":57,"stars":2,"note":"耐低温，秋末仍稳，红虫饵效佳"},{"name":"鲤鱼","score":51,"stars":2,"note":"秋季囤脂，食量大，玉米薯香常连口"},{"name":"翘嘴","score":48,"stars":2,"note":"昼伏夜出，傍晚亮片/拟饵效果好"},{"name":"黄颡鱼","score":48,"stars":2,"note":"喜暗，夜间或阴天守河边缓流"},{"name":"草鱼","score":34,"stars":1,"note":"喜暖，降温后转深水，宜守发酵饵"},{"name":"鲢鳙","score":30,"stars":1,"note":"喜高温，秋末活性低，需晴暖午间浮钓"}],"wtemp_mean":13.6,"juyu":{"score":78,"stars":4,"verdict":"鲫口偏好，值得出钓","segments":[{"name":"早口","range":"05:00-08:00","tip":"鲫鱼靠边觅食，钓浅滩水草边，腥香饵+酒米打窝，抓下顿"},{"name":"上午","range":"08:00-11:00","tip":"口渐稀，可钓深浅交界，少量补窝守钓"},{"name":"午间","range":"11:00-14:00","tip":"停口时段，钓深水遮阴或歇竿，避开强光"},{"name":"下午","range":"14:00-17:00","tip":"口回升，逐步向浅滩移竿，拉饵诱钓结合"},{"name":"晚口","range":"17:00-20:00","tip":"全天黄金窗口，鲫鱼集群靠边，拉饵抽频率"},{"name":"夜间","range":"20:00-05:00","tip":"夏季可钓，秋冬夜间停口，收竿休息"}],"gear":{"line":"主线0.8 + 子线0.4","hook":"袖钩4号","bait":"腥香商品饵 / 蚯蚓，酒米打窝","depth":"钓深1.5-2.5米，水草边优先","tone":"腥香各半","adjust":"调四钓二，抓下顿半目"},"notes":["微风适宜：溶氧足，食物聚下风口，优先下风口1-2米"],"hours":[67,65,65,65,64,78,81,79,77,74,72,78,78,78,80,81,83,84,79,78,74,71,71,69]},"carp":{"score":71,"stars":3,"verdict":"鲤口平平，早晚碰碰运气","strategy":"鲤鱼趋温：深浅交界打窝守钓，玉米薯香","best_windows":[{"start":"16:00","end":"18:00","score":76,"label":"16:00-18:00"},{"start":"18:00","end":"20:00","score":74,"label":"18:00-20:00"}],"hours":[64,64,56,56,56,65,69,67,66,70,68,69,70,70,72,73,76,77,75,74,71,68,68,66]},"catfish":{"score":69,"stars":3,"verdict":"鲶口平平，后半夜试试","strategy":"鲶鱼活性低：仅傍晚后短窗口，鸡肝逗钓","best_windows":[{"start":"00:00","end":"02:00","score":75,"label":"00:00-02:00"},{"start":"22:00","end":"00:00","score":77,"label":"22:00-00:00"}],"hours":[76,74,63,59,58,61,64,59,53,57,55,57,57,57,59,60,63,65,67,71,73,74,77,77]},"hours":[{"h":0,"score":53,"temp":9.0,"wind":1.5,"wdir":"西风","wlv":1,"rain":0.0,"wtemp":12.2,"press_d":0.3,"cloud":0,"hum":65},{"h":1,"score":53,"temp":8.9,"wind":2.6,"wdir":"西风","wlv":2,"rain":0.0,"wtemp":12.1,"press_d":0.3,"cloud":0,"hum":67},{"h":2,"score":53,"temp":8.2,"wind":2.1,"wdir":"西北风","wlv":2,"rain":0.0,"wtemp":11.7,"press_d":0.3,"cloud":0,"hum":70},{"h":3,"score":53,"temp":7.4,"wind":1.4,"wdir":"西北风","wlv":1,"rain":0.0,"wtemp":11.3,"press_d":0.0,"cloud":0,"hum":72},{"h":4,"score":51,"temp":7.2,"wind":0.4,"wdir":"西北风","wlv":1,"rain":0.0,"wtemp":11.2,"press_d":-0.3,"cloud":0,"hum":72},{"h":5,"score":75,"temp":6.8,"wind":0.5,"wdir":"东北风","wlv":1,"rain":0.0,"wtemp":11.0,"press_d":-0.2,"cloud":0,"hum":72},{"h":6,"score":77,"temp":6.2,"wind":1.4,"wdir":"东北风","wlv":1,"rain":0.0,"wtemp":10.6,"press_d":0.4,"cloud":0,"hum":73},{"h":7,"score":69,"temp":5.8,"wind":2.1,"wdir":"东风","wlv":2,"rain":0.0,"wtemp":10.4,"press_d":1.1,"cloud":0,"hum":76},{"h":8,"score":65,"temp":7.8,"wind":2.7,"wdir":"东风","wlv":2,"rain":0.0,"wtemp":11.5,"press_d":1.5,"cloud":0,"hum":66},{"h":9,"score":69,"temp":11.0,"wind":1.8,"wdir":"东风","wlv":2,"rain":0.0,"wtemp":13.3,"press_d":1.8,"cloud":0,"hum":54},{"h":10,"score":71,"temp":14.0,"wind":1.6,"wdir":"东风","wlv":1,"rain":0.0,"wtemp":14.9,"press_d":1.1,"cloud":0,"hum":43},{"h":11,"score":64,"temp":16.0,"wind":1.8,"wdir":"东风","wlv":2,"rain":0.0,"wtemp":16.0,"press_d":0.1,"cloud":0,"hum":38},{"h":12,"score":66,"temp":17.3,"wind":2.0,"wdir":"东南风","wlv":2,"rain":0.0,"wtemp":16.7,"press_d":-1.0,"cloud":0,"hum":38},{"h":13,"score":68,"temp":18.1,"wind":2.3,"wdir":"东南风","wlv":2,"rain":0.0,"wtemp":17.2,"press_d":-1.8,"cloud":0,"hum":39},{"h":14,"score":74,"temp":18.7,"wind":2.4,"wdir":"东南风","wlv":2,"rain":0.0,"wtemp":17.5,"press_d":-2.1,"cloud":0,"hum":38},{"h":15,"score":73,"temp":18.7,"wind":2.3,"wdir":"东南风","wlv":2,"rain":0.0,"wtemp":17.5,"press_d":-1.8,"cloud":2,"hum":37},{"h":16,"score":72,"temp":17.9,"wind":3.3,"wdir":"东南风","wlv":2,"rain":0.0,"wtemp":17.1,"press_d":-1.0,"cloud":1,"hum":39},{"h":17,"score":85,"temp":15.2,"wind":3.9,"wdir":"东南风","wlv":3,"rain":0.0,"wtemp":15.6,"press_d":-0.2,"cloud":0,"hum":56},{"h":18,"score":79,"temp":13.1,"wind":4.3,"wdir":"东风","wlv":3,"rain":0.0,"wtemp":14.4,"press_d":0.5,"cloud":0,"hum":69},{"h":19,"score":79,"temp":11.7,"wind":4.2,"wdir":"东风","wlv":3,"rain":0.0,"wtemp":13.7,"press_d":0.9,"cloud":0,"hum":77},{"h":20,"score":70,"temp":10.8,"wind":3.6,"wdir":"东风","wlv":3,"rain":0.0,"wtemp":13.2,"press_d":1.0,"cloud":1,"hum":82},{"h":21,"score":71,"temp":10.3,"wind":3.1,"wdir":"东风","wlv":2,"rain":0.0,"wtemp":12.9,"press_d":0.8,"cloud":38,"hum":86},{"h":22,"score":70,"temp":9.9,"wind":2.7,"wdir":"东风","wlv":2,"rain":0.0,"wtemp":12.7,"press_d":0.3,"cloud":48,"hum":89},{"h":23,"score":54,"temp":9.3,"wind":2.1,"wdir":"东风","wlv":2,"rain":0.0,"wtemp":12.3,"press_d":-0.3,"cloud":61,"hum":91}]},{"date":"2026-11-04","label":"周三","weekday":"周三","is_today":false,"is_past":false,"score":82,"rating":["A","宜钓","综合鱼口偏好，值得出钓"],"weather":["毛毛雨","🌦️"],"tmax":17.5,"tmin":7.5,"tmean":12.2,"wind_max":5.2,"wind_level":3,"wind_dir":"西南风","rain_sum":0.1,"cloud_mean":81,"hum_mean":74,"press_delta":-4.2,"sunrise":"06:38","sunset":"17:02","best_windows":[{"start":"05:00","end":"07:00","score":80,"label":"05:00-07:00"},{"start":"17:00","end":"19:00","score":86,"label":"17:00-19:00"},{"start":"19:00","end":"21:00","score":77,"label":"19:00-21:00"}],"factors":[{"key":"temp","name":"气温水温","icon":"🌡️","score":80,"value":"7.5~17.5℃ · 均12.2℃","advice":"温度偏凉，鱼口平稳，早晚集中在浅水"},{"key":"press","name":"气压趋势","icon":"📊","score":95,"value":"全日-4.2 hPa","advice":"气压快速下降，鱼大量游动觅食，全天口好"},{"key":"wind","name":"风向风力","icon":"💨","score":76,"value":"最大3级 · 西南风","advice":"微风轻浪，最佳钓风，抛竿顺畅溶氧足"},{"key":"rain","name":"降水","icon":"🌧️","score":90,"value":"0.1 mm","advice":"小雨天气，溶氧充足，鱼口偏好"},{"key":"cloud","name":"云量光照","icon":"⛅","score":76,"value":"平均云量81%","advice":"全天阴沉，光线暗，鱼靠边，宜钓浅"}],"species":[{"name":"鲫鱼","score":86,"stars":5,"note":"耐低温，秋末仍稳，红虫饵效佳"},{"name":"鲤鱼","score":53,"stars":2,"note":"秋季囤脂，食量大，玉米薯香常连口"},{"name":"翘嘴","score":50,"stars":2,"note":"昼伏夜出，傍晚亮片/拟饵效果好"},{"name":"黄颡鱼","score":50,"stars":2,"note":"喜暗，夜间或阴天守河边缓流"},{"name":"草鱼","score":36,"stars":1,"note":"喜暖，降温后转深水，宜守发酵饵"},{"name":"鲢鳙","score":30,"stars":1,"note":"喜高温，秋末活性低，需晴暖午间浮钓"}],"wtemp_mean":14.2,"juyu":{"score":79,"stars":4,"verdict":"鲫口偏好，值得出钓","segments":[{"name":"早口","range":"05:00-08:00","tip":"鲫鱼靠边觅食，钓浅滩水草边，腥香饵+酒米打窝，抓下顿"},{"name":"上午","range":"08:00-11:00","tip":"口渐稀，可钓深浅交界，少量补窝守钓"},{"name":"午间","range":"11:00-14:00","tip":"停口时段，钓深水遮阴或歇竿，避开强光"},{"name":"下午","range":"14:00-17:00","tip":"口回升，逐步向浅滩移竿，拉饵诱钓结合"},{"name":"晚口","range":"17:00-20:00","tip":"全天黄金窗口，鲫鱼集群靠边，拉饵抽频率"},{"name":"夜间","range":"20:00-05:00","tip":"夏季可钓，秋冬夜间停口，收竿休息"}],"gear":{"line":"主线0.8 + 子线0.4","hook":"袖钩4号","bait":"腥香商品饵 / 蚯蚓，酒米打窝","depth":"钓深1.5-2.5米，水草边优先","tone":"腥香各半","adjust":"调四钓二，抓下顿半目"},"notes":["微风适宜：溶氧足，食物聚下风口，优先下风口1-2米"],"hours":[68,67,67,67,68,82,82,81,77,74,79,79,78,76,76,77,82,84,88,81,74,71,68,68]},"carp":{"score":73,"stars":3,"verdict":"鲤口平平，早晚碰碰运气","strategy":"鲤鱼趋温：深浅交界打窝守钓，玉米薯香","best_windows":[{"start":"06:00","end":"08:00","score":78,"label":"06:00-08:00"},{"start":"17:00","end":"19:00","score":78,"label":"17:00-19:00"}],"hours":[66,65,57,58,60,69,79,77,73,70,71,71,71,69,70,71,76,77,80,77,71,68,66,66]},"catfish":{"score":70,"stars":3,"verdict":"鲶口平平，后半夜试试","strategy":"鲶鱼活性低：仅傍晚后短窗口，鸡肝逗钓","best_windows":[{"start":"18:00","end":"20:00","score":74,"label":"18:00-20:00"},{"start":"23:00","end":"01:00","score":77,"label":"23:00-01:00"}],"hours":[77,75,64,60,60,63,72,68,60,57,57,58,57,57,57,58,63,65,74,73,73,74,75,77]},"hours":[{"h":0,"score":56,"temp":8.8,"wind":2.1,"wdir":"东北风","wlv":2,"rain":0.0,"wtemp":12.3,"press_d":-0.9,"cloud":70,"hum":92},{"h":1,"score":56,"temp":8.3,"wind":1.7,"wdir":"东北风","wlv":2,"rain":0.0,"wtemp":12.1,"press_d":-0.8,"cloud":75,"hum":93},{"h":2,"score":55,"temp":7.9,"wind":1.6,"wdir":"东北风","wlv":1,"rain":0.0,"wtemp":11.8,"press_d":-0.9,"cloud":87,"hum":93},{"h":3,"score":55,"temp":7.7,"wind":1.6,"wdir":"东北风","wlv":2,"rain":0.0,"wtemp":11.7,"press_d":-1.4,"cloud":88,"hum":93},{"h":4,"score":55,"temp":7.5,"wind":1.9,"wdir":"东风","wlv":2,"rain":0.0,"wtemp":11.6,"press_d":-1.7,"cloud":89,"hum":93},{"h":5,"score":80,"temp":7.9,"wind":1.8,"wdir":"东南风","wlv":2,"rain":0.0,"wtemp":11.8,"press_d":-1.6,"cloud":51,"hum":91},{"h":6,"score":80,"temp":9.1,"wind":3.4,"wdir":"南风","wlv":3,"rain":0.0,"wtemp":12.5,"press_d":-0.8,"cloud":99,"hum":88},{"h":7,"score":78,"temp":9.6,"wind":3.5,"wdir":"西南风","wlv":3,"rain":0.0,"wtemp":12.8,"press_d":-0.2,"cloud":92,"hum":83},{"h":8,"score":70,"temp":10.7,"wind":3.4,"wdir":"西南风","wlv":3,"rain":0.0,"wtemp":13.4,"press_d":0.5,"cloud":100,"hum":77},{"h":9,"score":70,"temp":12.5,"wind":2.7,"wdir":"西南风","wlv":2,"rain":0.0,"wtemp":14.4,"press_d":0.9,"cloud":100,"hum":71},{"h":10,"score":76,"temp":14.8,"wind":3.3,"wdir":"西南风","wlv":2,"rain":0.0,"wtemp":15.6,"press_d":0.2,"cloud":100,"hum":63},{"h":11,"score":68,"temp":16.6,"wind":4.3,"wdir":"西南风","wlv":3,"rain":0.0,"wtemp":16.6,"press_d":-0.6,"cloud":100,"hum":56},{"h":12,"score":68,"temp":17.5,"wind":4.4,"wdir":"西南风","wlv":3,"rain":0.0,"wtemp":17.1,"press_d":-1.8,"cloud":100,"hum":52},{"h":13,"score":67,"temp":17.3,"wind":5.1,"wdir":"西南风","wlv":3,"rain":0.0,"wtemp":17.0,"press_d":-2.3,"cloud":100,"hum":52},{"h":14,"score":72,"temp":16.9,"wind":5.2,"wdir":"西南风","wlv":3,"rain":0.0,"wtemp":16.8,"press_d":-2.4,"cloud":100,"hum":54},{"h":15,"score":71,"temp":16.2,"wind":5.2,"wdir":"西南风","wlv":3,"rain":0.0,"wtemp":16.4,"press_d":-1.9,"cloud":100,"hum":56},{"h":16,"score":73,"temp":15.7,"wind":4.7,"wdir":"西南风","wlv":3,"rain":0.0,"wtemp":16.1,"press_d":-0.9,"cloud":100,"hum":58},{"h":17,"score":86,"temp":14.7,"wind":4.2,"wdir":"西南风","wlv":3,"rain":0.0,"wtemp":15.6,"press_d":-0.4,"cloud":100,"hum":64},{"h":18,"score":85,"temp":13.7,"wind":4.1,"wdir":"西南风","wlv":3,"rain":0.1,"wtemp":15.0,"press_d":0.2,"cloud":100,"hum":69},{"h":19,"score":83,"temp":13.1,"wind":3.3,"wdir":"西南风","wlv":2,"rain":0.0,"wtemp":14.7,"press_d":0.2,"cloud":100,"hum":72},{"h":20,"score":71,"temp":12.6,"wind":3.1,"wdir":"西南风","wlv":2,"rain":0.0,"wtemp":14.4,"press_d":0.5,"cloud":40,"hum":74},{"h":21,"score":71,"temp":12.0,"wind":3.3,"wdir":"西南风","wlv":2,"rain":0.0,"wtemp":14.1,"press_d":0.6,"cloud":27,"hum":77},{"h":22,"score":71,"temp":11.4,"wind":3.0,"wdir":"西南风","wlv":2,"rain":0.0,"wtemp":13.8,"press_d":0.8,"cloud":21,"hum":80},{"h":23,"score":58,"temp":11.0,"wind":2.9,"wdir":"西南风","wlv":2,"rain":0.0,"wtemp":13.5,"press_d":0.3,"cloud":4,"hum":83}]},{"date":"2026-11-05","label":"周四","weekday":"周四","is_today":false,"is_past":false,"score":76,"rating":["A","宜钓","综合鱼口偏好，值得出钓"],"weather":["雾","🌫️"],"tmax":17.4,"tmin":6.5,"tmean":11.5,"wind_max":5.4,"wind_level":3,"wind_dir":"西风","rain_sum":0.0,"cloud_mean":18,"hum_mean":63,"press_delta":7.0,"sunrise":"06:39","sunset":"17:01","best_windows":[{"start":"05:00","end":"07:00","score":77,"label":"05:00-07:00"},{"start":"14:00","end":"16:00","score":72,"label":"14:00-16:00"},{"start":"17:00","end":"19:00","score":80,"label":"17:00-19:00"}],"factors":[{"key":"temp","name":"气温水温","icon":"🌡️","score":80,"value":"6.5~17.4℃ · 均11.5℃","advice":"温度偏凉，鱼口平稳，早晚集中在浅水"},{"key":"press","name":"气压趋势","icon":"📊","score":32,"value":"全日+7.0 hPa","advice":"气压快速上升，鱼难开口，建议守早口或改日"},{"key":"wind","name":"风向风力","icon":"💨","score":76,"value":"最大3级 · 西风","advice":"微风轻浪，最佳钓风，抛竿顺畅溶氧足"},{"key":"rain","name":"降水","icon":"🌧️","score":66,"value":"无降水","advice":"无降水，晴天鱼口靠早晚，午间可歇"},{"key":"cloud","name":"云量光照","icon":"⛅","score":70,"value":"平均云量18%","advice":"强光晴天，鱼警惕性高，宜钓深水阴影"}],"species":[{"name":"鲫鱼","score":56,"stars":2,"note":"耐低温，秋末仍稳，红虫饵效佳"},{"name":"鲤鱼","score":50,"stars":2,"note":"秋季囤脂，食量大，玉米薯香常连口"},{"name":"翘嘴","score":48,"stars":2,"note":"昼伏夜出，傍晚亮片/拟饵效果好"},{"name":"黄颡鱼","score":48,"stars":2,"note":"喜暗，夜间或阴天守河边缓流"},{"name":"草鱼","score":34,"stars":1,"note":"喜暖，降温后转深水，宜守发酵饵"},{"name":"鲢鳙","score":30,"stars":1,"note":"喜高温，秋末活性低，需晴暖午间浮钓"}],"wtemp_mean":13.5,"juyu":{"score":77,"stars":4,"verdict":"鲫口偏好，值得出钓","segments":[{"name":"早口","range":"05:00-08:00","tip":"鲫鱼靠边觅食，钓浅滩水草边，腥香饵+酒米打窝，抓下顿"},{"name":"上午","range":"08:00-11:00","tip":"口渐稀，可钓深浅交界，少量补窝守钓"},{"name":"午间","range":"11:00-14:00","tip":"停口时段，钓深水遮阴或歇竿，避开强光"},{"name":"下午","range":"14:00-17:00","tip":"口回升，逐步向浅滩移竿，拉饵诱钓结合"},{"name":"晚口","range":"17:00-20:00","tip":"全天黄金窗口，鲫鱼集群靠边，拉饵抽频率"},{"name":"夜间","range":"20:00-05:00","tip":"夏季可钓，秋冬夜间停口，收竿休息"}],"gear":{"line":"主线0.8 + 子线0.4","hook":"袖钩4号","bait":"腥香商品饵 / 蚯蚓，酒米打窝","depth":"钓深1.5-2.5米，水草边优先","tone":"腥香各半","adjust":"调四钓二，抓下顿半目"},"notes":["气压快速上升：鲫鱼难开口，只守早口晚口或改日","微风适宜：溶氧足，食物聚下风口，优先下风口1-2米"],"hours":[66,67,65,65,68,82,81,79,77,74,72,72,76,77,78,79,81,82,76,76,71,66,63,61]},"carp":{"score":69,"stars":3,"verdict":"鲤口平平，早晚碰碰运气","strategy":"鲤鱼趋温：深浅交界打窝守钓，玉米薯香","best_windows":[{"start":"14:00","end":"16:00","score":73,"label":"14:00-16:00"},{"start":"16:00","end":"18:00","score":75,"label":"16:00-18:00"}],"hours":[65,65,63,64,60,69,69,67,65,62,68,69,69,71,72,74,75,75,73,72,68,63,60,58]},"catfish":{"score":69,"stars":3,"verdict":"鲶口平平，后半夜试试","strategy":"鲶鱼活性低：仅傍晚后短窗口，鸡肝逗钓","best_windows":[{"start":"00:00","end":"02:00","score":76,"label":"00:00-02:00"},{"start":"22:00","end":"00:00","score":72,"label":"22:00-00:00"}],"hours":[76,75,70,66,60,63,64,59,53,50,55,57,56,57,58,60,61,63,65,69,71,70,71,72]},"hours":[{"h":0,"score":58,"temp":10.4,"wind":2.8,"wdir":"西南风","wlv":2,"rain":0.0,"wtemp":12.9,"press_d":-0.3,"cloud":2,"hum":86},{"h":1,"score":56,"temp":9.9,"wind":2.7,"wdir":"西风","wlv":2,"rain":0.0,"wtemp":12.6,"press_d":-0.5,"cloud":0,"hum":89},{"h":2,"score":53,"temp":9.4,"wind":1.9,"wdir":"西北风","wlv":2,"rain":0.0,"wtemp":12.3,"press_d":-0.3,"cloud":0,"hum":90},{"h":3,"score":52,"temp":8.8,"wind":1.8,"wdir":"西风","wlv":2,"rain":0.0,"wtemp":12.0,"press_d":-0.4,"cloud":0,"hum":92},{"h":4,"score":54,"temp":8.3,"wind":1.8,"wdir":"西风","wlv":2,"rain":0.0,"wtemp":11.7,"press_d":-0.8,"cloud":0,"hum":93},{"h":5,"score":78,"temp":7.8,"wind":1.8,"wdir":"西风","wlv":2,"rain":0.0,"wtemp":11.5,"press_d":-0.7,"cloud":0,"hum":94},{"h":6,"score":76,"temp":7.0,"wind":2.1,"wdir":"西北风","wlv":2,"rain":0.0,"wtemp":11.0,"press_d":-0.2,"cloud":11,"hum":98},{"h":7,"score":74,"temp":6.5,"wind":2.0,"wdir":"西北风","wlv":2,"rain":0.0,"wtemp":10.8,"press_d":0.7,"cloud":100,"hum":100},{"h":8,"score":64,"temp":7.0,"wind":1.9,"wdir":"西北风","wlv":2,"rain":0.0,"wtemp":11.0,"press_d":1.3,"cloud":100,"hum":99},{"h":9,"score":66,"temp":8.5,"wind":1.8,"wdir":"西北风","wlv":2,"rain":0.0,"wtemp":11.9,"press_d":1.5,"cloud":79,"hum":88},{"h":10,"score":70,"temp":10.7,"wind":1.8,"wdir":"西风","wlv":2,"rain":0.0,"wtemp":13.1,"press_d":1.1,"cloud":36,"hum":75},{"h":11,"score":62,"temp":12.8,"wind":1.9,"wdir":"西风","wlv":2,"rain":0.0,"wtemp":14.2,"press_d":0.4,"cloud":3,"hum":64},{"h":12,"score":65,"temp":14.7,"wind":2.2,"wdir":"西风","wlv":2,"rain":0.0,"wtemp":15.3,"press_d":-0.3,"cloud":0,"hum":54},{"h":13,"score":67,"temp":16.3,"wind":2.7,"wdir":"西风","wlv":2,"rain":0.0,"wtemp":16.1,"press_d":-1.1,"cloud":0,"hum":47},{"h":14,"score":72,"temp":17.3,"wind":3.1,"wdir":"西风","wlv":2,"rain":0.0,"wtemp":16.7,"press_d":-1.4,"cloud":0,"hum":41},{"h":15,"score":72,"temp":17.1,"wind":3.8,"wdir":"西风","wlv":3,"rain":0.0,"wtemp":16.6,"press_d":-0.9,"cloud":0,"hum":36},{"h":16,"score":69,"temp":16.2,"wind":4.5,"wdir":"西风","wlv":3,"rain":0.0,"wtemp":16.1,"press_d":0.3,"cloud":0,"hum":33},{"h":17,"score":82,"temp":15.2,"wind":4.6,"wdir":"西风","wlv":3,"rain":0.0,"wtemp":15.5,"press_d":1.3,"cloud":0,"hum":32},{"h":18,"score":79,"temp":14.1,"wind":3.9,"wdir":"西北风","wlv":3,"rain":0.0,"wtemp":14.9,"press_d":2.3,"cloud":0,"hum":34},{"h":19,"score":76,"temp":12.9,"wind":3.9,"wdir":"北风","wlv":3,"rain":0.0,"wtemp":14.3,"press_d":3.3,"cloud":1,"hum":39},{"h":20,"score":67,"temp":11.9,"wind":4.9,"wdir":"北风","wlv":3,"rain":0.0,"wtemp":13.7,"press_d":3.8,"cloud":6,"hum":40},{"h":21,"score":65,"temp":11.4,"wind":5.4,"wdir":"北风","wlv":3,"rain":0.0,"wtemp":13.4,"press_d":3.6,"cloud":16,"hum":34},{"h":22,"score":66,"temp":11.0,"wind":5.4,"wdir":"北风","wlv":3,"rain":0.0,"wtemp":13.2,"press_d":2.8,"cloud":29,"hum":26},{"h":23,"score":51,"temp":10.7,"wind":5.3,"wdir":"北风","wlv":3,"rain":0.0,"wtemp":13.1,"press_d":2.3,"cloud":44,"hum":22}]},{"date":"2026-11-06","label":"周五","weekday":"周五","is_today":false,"is_past":false,"score":70,"rating":["B","一般","鱼口平平，需抓对时段"],"weather":["阴","☁️"],"tmax":10.7,"tmin":3.3,"tmean":8.6,"wind_max":5.9,"wind_level":4,"wind_dir":"北风","rain_sum":0.0,"cloud_mean":35,"hum_mean":25,"press_delta":10.8,"sunrise":"06:40","sunset":"17:00","best_windows":[{"start":"05:00","end":"07:00","score":74,"label":"05:00-07:00"},{"start":"14:00","end":"16:00","score":69,"label":"14:00-16:00"},{"start":"17:00","end":"19:00","score":74,"label":"17:00-19:00"}],"factors":[{"key":"temp","name":"气温水温","icon":"🌡️","score":65,"value":"3.3~10.7℃ · 均8.6℃","advice":"温度偏凉，鱼口平稳，早晚集中在浅水"},{"key":"press","name":"气压趋势","icon":"📊","score":32,"value":"全日+10.8 hPa","advice":"气压快速上升，鱼难开口，建议守早口或改日"},{"key":"wind","name":"风向风力","icon":"💨","score":76,"value":"最大4级 · 北风","advice":"风浪渐大，宜钓背风湾，加大铅坠抗流"},{"key":"rain","name":"降水","icon":"🌧️","score":66,"value":"无降水","advice":"无降水，晴天鱼口靠早晚，午间可歇"},{"key":"cloud","name":"云量光照","icon":"⛅","score":78,"value":"平均云量35%","advice":"少云，光线柔和，鱼口正常"}],"species":[{"name":"鲫鱼","score":48,"stars":2,"note":"耐低温，秋末仍稳，红虫饵效佳"},{"name":"鲤鱼","score":42,"stars":1,"note":"秋季囤脂，食量大，玉米薯香常连口"},{"name":"翘嘴","score":39,"stars":1,"note":"昼伏夜出，傍晚亮片/拟饵效果好"},{"name":"黄颡鱼","score":39,"stars":1,"note":"喜暗，夜间或阴天守河边缓流"},{"name":"草鱼","score":30,"stars":1,"note":"喜暖，降温后转深水，宜守发酵饵"},{"name":"鲢鳙","score":30,"stars":1,"note":"喜高温，秋末活性低，需晴暖午间浮钓"}],"wtemp_mean":10.6,"juyu":{"score":72,"stars":3,"verdict":"鲫口平平，抓早晚窗口","segments":[{"name":"早口","range":"05:00-08:00","tip":"鲫鱼靠边觅食，钓浅滩水草边，腥香饵+酒米打窝，抓下顿"},{"name":"上午","range":"08:00-11:00","tip":"口渐稀，可钓深浅交界，少量补窝守钓"},{"name":"午间","range":"11:00-14:00","tip":"停口时段，钓深水遮阴或歇竿，避开强光"},{"name":"下午","range":"14:00-17:00","tip":"口回升，逐步向浅滩移竿，拉饵诱钓结合"},{"name":"晚口","range":"17:00-20:00","tip":"全天黄金窗口，鲫鱼集群靠边，拉饵抽频率"},{"name":"夜间","range":"20:00-05:00","tip":"夏季可钓，秋冬夜间停口，收竿休息"}],"gear":{"line":"主线0.8 + 子线0.4","hook":"袖钩4号","bait":"腥香商品饵 / 蚯蚓，酒米打窝","depth":"钓深1.5-2.5米，水草边优先","tone":"腥香各半","adjust":"调四钓二，抓下顿半目"},"notes":["微风适宜：溶氧足，食物聚下风口，优先下风口1-2米"],"hours":[61,60,62,62,64,77,76,74,72,69,67,67,68,69,72,74,76,77,79,67,62,59,57,57]},"carp":{"score":62,"stars":3,"verdict":"鲤口平平，早晚碰碰运气","strategy":"低温鲤鱼懒动：红虫/蚯蚓逗钓，选午间浅滩","best_windows":[{"start":"05:00","end":"07:00","score":66,"label":"05:00-07:00"},{"start":"16:00","end":"18:00","score":67,"label":"16:00-18:00"}],"hours":[52,51,54,54,57,66,65,62,60,57,55,57,59,60,64,66,67,67,67,64,60,58,55,56]},"catfish":{"score":63,"stars":3,"verdict":"鲶口平平，后半夜试试","strategy":"低温鲶鱼休眠，收竿改日","best_windows":[{"start":"21:00","end":"23:00","score":68,"label":"21:00-23:00"},{"start":"23:00","end":"01:00","score":67,"label":"23:00-01:00"}],"hours":[66,63,61,57,56,60,60,56,50,47,45,47,48,49,51,53,55,56,61,64,66,67,68,68]},"hours":[{"h":0,"score":54,"temp":10.4,"wind":4.8,"wdir":"北风","wlv":3,"rain":0.0,"wtemp":11.6,"press_d":2.1,"cloud":64,"hum":22},{"h":1,"score":53,"temp":10.0,"wind":4.1,"wdir":"东北风","wlv":3,"rain":0.0,"wtemp":11.4,"press_d":2.0,"cloud":85,"hum":23},{"h":2,"score":51,"temp":9.8,"wind":3.7,"wdir":"东北风","wlv":3,"rain":0.0,"wtemp":11.3,"press_d":1.9,"cloud":100,"hum":25},{"h":3,"score":51,"temp":9.7,"wind":3.8,"wdir":"北风","wlv":3,"rain":0.0,"wtemp":11.2,"press_d":1.8,"cloud":100,"hum":25},{"h":4,"score":51,"temp":9.7,"wind":4.2,"wdir":"北风","wlv":3,"rain":0.0,"wtemp":11.2,"press_d":1.7,"cloud":100,"hum":25},{"h":5,"score":75,"temp":9.5,"wind":4.6,"wdir":"北风","wlv":3,"rain":0.0,"wtemp":11.1,"press_d":1.9,"cloud":95,"hum":26},{"h":6,"score":73,"temp":8.9,"wind":4.8,"wdir":"北风","wlv":3,"rain":0.0,"wtemp":10.8,"press_d":2.5,"cloud":74,"hum":27},{"h":7,"score":71,"temp":8.1,"wind":5.1,"wdir":"北风","wlv":3,"rain":0.0,"wtemp":10.3,"press_d":3.5,"cloud":45,"hum":29},{"h":8,"score":60,"temp":7.7,"wind":5.3,"wdir":"北风","wlv":3,"rain":0.0,"wtemp":10.1,"press_d":3.9,"cloud":22,"hum":28},{"h":9,"score":59,"temp":8.0,"wind":5.6,"wdir":"北风","wlv":4,"rain":0.0,"wtemp":10.3,"press_d":3.5,"cloud":10,"hum":25},{"h":10,"score":59,"temp":8.7,"wind":5.9,"wdir":"北风","wlv":4,"rain":0.0,"wtemp":10.7,"press_d":2.4,"cloud":5,"hum":20},{"h":11,"score":52,"temp":9.3,"wind":5.9,"wdir":"北风","wlv":4,"rain":0.0,"wtemp":11.0,"press_d":1.4,"cloud":1,"hum":17},{"h":12,"score":55,"temp":9.9,"wind":5.6,"wdir":"北风","wlv":4,"rain":0.0,"wtemp":11.3,"press_d":0.3,"cloud":0,"hum":15},{"h":13,"score":62,"temp":10.3,"wind":5.2,"wdir":"北风","wlv":3,"rain":0.0,"wtemp":11.5,"press_d":-0.7,"cloud":0,"hum":14},{"h":14,"score":69,"temp":10.5,"wind":4.5,"wdir":"北风","wlv":3,"rain":0.0,"wtemp":11.6,"press_d":-1.3,"cloud":0,"hum":14},{"h":15,"score":69,"temp":10.1,"wind":3.7,"wdir":"北风","wlv":3,"rain":0.0,"wtemp":11.4,"press_d":-0.9,"cloud":1,"hum":15},{"h":16,"score":62,"temp":9.4,"wind":2.8,"wdir":"北风","wlv":2,"rain":0.0,"wtemp":11.0,"press_d":0.1,"cloud":3,"hum":16},{"h":17,"score":74,"temp":8.7,"wind":1.9,"wdir":"北风","wlv":2,"rain":0.0,"wtemp":10.7,"press_d":1.0,"cloud":5,"hum":19},{"h":18,"score":74,"temp":8.0,"wind":1.1,"wdir":"东北风","wlv":1,"rain":0.0,"wtemp":10.3,"press_d":1.5,"cloud":7,"hum":24},{"h":19,"score":71,"temp":7.3,"wind":0.5,"wdir":"东北风","wlv":1,"rain":0.0,"wtemp":9.9,"press_d":1.7,"cloud":8,"hum":31},{"h":20,"score":62,"temp":6.6,"wind":0.2,"wdir":"东风","wlv":0,"rain":0.0,"wtemp":9.5,"press_d":1.8,"cloud":13,"hum":38},{"h":21,"score":57,"temp":5.9,"wind":0.3,"wdir":"东北风","wlv":0,"rain":0.0,"wtemp":9.1,"press_d":1.6,"cloud":23,"hum":39},{"h":22,"score":57,"temp":5.3,"wind":0.7,"wdir":"东北风","wlv":1,"rain":0.0,"wtemp":8.8,"press_d":1.3,"cloud":36,"hum":38},{"h":23,"score":46,"temp":4.7,"wind":1.3,"wdir":"东北风","wlv":1,"rain":0.0,"wtemp":8.5,"press_d":0.9,"cloud":45,"hum":37}]},{"date":"2026-11-07","label":"周六","weekday":"周六","is_today":false,"is_past":false,"score":74,"rating":["B","一般","鱼口平平，需抓对时段"],"weather":["阴","☁️"],"tmax":9.8,"tmin":1.7,"tmean":6.2,"wind_max":4.1,"wind_level":3,"wind_dir":"东南风","rain_sum":0.0,"cloud_mean":69,"hum_mean":40,"press_delta":-2.5,"sunrise":"06:41","sunset":"16:59","best_windows":[{"start":"05:00","end":"07:00","score":71,"label":"05:00-07:00"},{"start":"17:00","end":"19:00","score":78,"label":"17:00-19:00"},{"start":"19:00","end":"21:00","score":72,"label":"19:00-21:00"}],"factors":[{"key":"temp","name":"气温水温","icon":"🌡️","score":65,"value":"1.7~9.8℃ · 均6.2℃","advice":"水温偏低，鱼活性下降，宜钓浅滩、小钩细线"},{"key":"press","name":"气压趋势","icon":"📊","score":95,"value":"全日-2.5 hPa","advice":"气压快速下降，鱼大量游动觅食，全天口好"},{"key":"wind","name":"风向风力","icon":"💨","score":90,"value":"最大3级 · 东南风","advice":"微风轻浪，最佳钓风，抛竿顺畅溶氧足"},{"key":"rain","name":"降水","icon":"🌧️","score":66,"value":"无降水","advice":"无降水，晴天鱼口靠早晚，午间可歇"},{"key":"cloud","name":"云量光照","icon":"⛅","score":88,"value":"平均云量69%","advice":"多云/阴天，弱光环境鱼大胆，鱼口偏好"}],"species":[{"name":"鲫鱼","score":41,"stars":1,"note":"耐低温，秋末仍稳，红虫饵效佳"},{"name":"鲤鱼","score":35,"stars":1,"note":"秋季囤脂，食量大，玉米薯香常连口"},{"name":"翘嘴","score":32,"stars":1,"note":"昼伏夜出，傍晚亮片/拟饵效果好"},{"name":"黄颡鱼","score":32,"stars":1,"note":"喜暗，夜间或阴天守河边缓流"},{"name":"草鱼","score":30,"stars":1,"note":"喜暖，降温后转深水，宜守发酵饵"},{"name":"鲢鳙","score":30,"stars":1,"note":"喜高温，秋末活性低，需晴暖午间浮钓"}],"wtemp_mean":8.2,"juyu":{"score":69,"stars":3,"verdict":"鲫口平平，抓早晚窗口","segments":[{"name":"早口","range":"05:00-08:00","tip":"鲫鱼靠边觅食，钓浅滩水草边，腥香饵+酒米打窝，抓下顿"},{"name":"上午","range":"08:00-11:00","tip":"口渐稀，可钓深浅交界，少量补窝守钓"},{"name":"午间","range":"11:00-14:00","tip":"停口时段，钓深水遮阴或歇竿，避开强光"},{"name":"下午","range":"14:00-17:00","tip":"口回升，逐步向浅滩移竿，拉饵诱钓结合"},{"name":"晚口","range":"17:00-20:00","tip":"全天黄金窗口，鲫鱼集群靠边，拉饵抽频率"},{"name":"夜间","range":"20:00-05:00","tip":"夏季可钓，秋冬夜间停口，收竿休息"}],"gear":{"line":"主线0.6 + 子线0.3","hook":"袖钩3号（无倒刺）","bait":"红虫/蚯蚓，或浓腥商品饵","depth":"钓深2.5-3.5米，找缓流深潭","tone":"腥味为主，加虾粉提鲜","adjust":"调四钓二偏钝，抓小口、防闹"},"notes":["微风适宜：溶氧足，食物聚下风口，优先下风口1-2米","水温偏低：鲫鱼活性下降，小钩细线红虫，抓轻口"],"hours":[55,54,53,55,57,71,71,70,68,64,65,63,73,69,61,74,77,71,72,72,68,65,62,60]},"carp":{"score":63,"stars":3,"verdict":"鲤口平平，早晚碰碰运气","strategy":"低温鲤鱼懒动：红虫/蚯蚓逗钓，选午间浅滩","best_windows":[{"start":"16:00","end":"18:00","score":70,"label":"16:00-18:00"},{"start":"18:00","end":"20:00","score":69,"label":"18:00-20:00"}],"hours":[48,47,47,50,53,62,63,61,59,56,63,62,62,60,61,66,68,71,70,68,65,62,60,60]},"catfish":{"score":63,"stars":3,"verdict":"鲶口平平，后半夜试试","strategy":"低温鲶鱼休眠，收竿改日","best_windows":[{"start":"19:00","end":"21:00","score":67,"label":"19:00-21:00"},{"start":"21:00","end":"23:00","score":70,"label":"21:00-23:00"}],"hours":[63,61,57,55,54,57,59,55,48,46,51,50,50,50,51,53,56,60,63,66,68,69,70,71]},"hours":[{"h":0,"score":46,"temp":4.2,"wind":1.9,"wdir":"东北风","wlv":2,"rain":0.0,"wtemp":7.1,"press_d":0.8,"cloud":49,"hum":38},{"h":1,"score":46,"temp":3.7,"wind":2.6,"wdir":"东北风","wlv":2,"rain":0.0,"wtemp":6.8,"press_d":0.6,"cloud":49,"hum":39},{"h":2,"score":46,"temp":3.2,"wind":3.1,"wdir":"东北风","wlv":2,"rain":0.0,"wtemp":6.6,"press_d":0.5,"cloud":47,"hum":40},{"h":3,"score":47,"temp":2.7,"wind":3.3,"wdir":"东北风","wlv":2,"rain":0.0,"wtemp":6.3,"press_d":0.1,"cloud":42,"hum":41},{"h":4,"score":47,"temp":2.2,"wind":3.5,"wdir":"东北风","wlv":3,"rain":0.0,"wtemp":6.0,"press_d":-0.2,"cloud":36,"hum":43},{"h":5,"score":71,"temp":2.0,"wind":3.6,"wdir":"东北风","wlv":3,"rain":0.0,"wtemp":5.9,"press_d":-0.3,"cloud":32,"hum":44},{"h":6,"score":71,"temp":2.0,"wind":3.9,"wdir":"东北风","wlv":3,"rain":0.0,"wtemp":5.9,"press_d":0.1,"cloud":32,"hum":43},{"h":7,"score":69,"temp":2.2,"wind":4.1,"wdir":"东北风","wlv":3,"rain":0.0,"wtemp":6.0,"press_d":0.7,"cloud":36,"hum":41},{"h":8,"score":59,"temp":3.0,"wind":4.0,"wdir":"东北风","wlv":3,"rain":0.0,"wtemp":6.4,"press_d":0.9,"cloud":44,"hum":40},{"h":9,"score":60,"temp":4.9,"wind":3.6,"wdir":"东北风","wlv":3,"rain":0.0,"wtemp":7.5,"press_d":0.7,"cloud":61,"hum":38},{"h":10,"score":67,"temp":7.3,"wind":2.8,"wdir":"东北风","wlv":2,"rain":0.0,"wtemp":8.8,"press_d":0.1,"cloud":84,"hum":37},{"h":11,"score":57,"temp":9.1,"wind":2.1,"wdir":"东风","wlv":2,"rain":0.0,"wtemp":9.8,"press_d":-0.4,"cloud":100,"hum":37},{"h":12,"score":60,"temp":9.6,"wind":1.1,"wdir":"东风","wlv":1,"rain":0.0,"wtemp":10.1,"press_d":-1.0,"cloud":100,"hum":38},{"h":13,"score":57,"temp":9.4,"wind":0.1,"wdir":"东南风","wlv":0,"rain":0.0,"wtemp":10.0,"press_d":-1.4,"cloud":100,"hum":40},{"h":14,"score":62,"temp":9.2,"wind":0.8,"wdir":"西南风","wlv":1,"rain":0.0,"wtemp":9.8,"press_d":-1.5,"cloud":100,"hum":41},{"h":15,"score":69,"temp":10.0,"wind":3.6,"wdir":"西南风","wlv":3,"rain":0.0,"wtemp":10.3,"press_d":-1.9,"cloud":89,"hum":30},{"h":16,"score":65,"temp":9.8,"wind":3.4,"wdir":"西南风","wlv":2,"rain":0.0,"wtemp":10.2,"press_d":-1.4,"cloud":93,"hum":32},{"h":17,"score":80,"temp":9.3,"wind":3.0,"wdir":"西南风","wlv":2,"rain":0.0,"wtemp":9.9,"press_d":-0.9,"cloud":96,"hum":34},{"h":18,"score":77,"temp":8.6,"wind":2.5,"wdir":"西南风","wlv":2,"rain":0.0,"wtemp":9.5,"press_d":0.1,"cloud":97,"hum":37},{"h":19,"score":77,"temp":8.0,"wind":2.1,"wdir":"西南风","wlv":2,"rain":0.0,"wtemp":9.2,"press_d":0.2,"cloud":96,"hum":41},{"h":20,"score":68,"temp":7.5,"wind":2.0,"wdir":"西风","wlv":2,"rain":0.0,"wtemp":8.9,"press_d":0.1,"cloud":91,"hum":43},{"h":21,"score":68,"temp":7.2,"wind":2.0,"wdir":"西风","wlv":2,"rain":0.0,"wtemp":8.8,"press_d":-0.1,"cloud":81,"hum":46},{"h":22,"score":69,"temp":6.9,"wind":2.3,"wdir":"西南风","wlv":2,"rain":0.0,"wtemp":8.6,"press_d":-0.4,"cloud":65,"hum":48},{"h":23,"score":58,"temp":6.6,"wind":2.6,"wdir":"西南风","wlv":2,"rain":0.0,"wtemp":8.4,"press_d":-0.6,"cloud":47,"hum":50}]},{"date":"2026-11-08","label":"周日","weekday":"周日","is_today":false,"is_past":false,"score":72,"rating":["B","一般","鱼口平平，需抓对时段"],"weather":["晴间多云","🌤️"],"tmax":13.4,"tmin":3.0,"tmean":7.6,"wind_max":4.0,"wind_level":3,"wind_dir":"西北风","rain_sum":0.0,"cloud_mean":2,"hum_mean":46,"press_delta":3.9,"sunrise":"06:43","sunset":"16:58","best_windows":[{"start":"05:00","end":"07:00","score":71,"label":"05:00-07:00"},{"start":"17:00","end":"19:00","score":76,"label":"17:00-19:00"},{"start":"19:00","end":"21:00","score":70,"label":"19:00-21:00"}],"factors":[{"key":"temp","name":"气温水温","icon":"🌡️","score":65,"value":"3.0~13.4℃ · 均7.6℃","advice":"水温偏低，鱼活性下降，宜钓浅滩、小钩细线"},{"key":"press","name":"气压趋势","icon":"📊","score":45,"value":"全日+3.9 hPa","advice":"气压快速上升，鱼难开口，建议守早口或改日"},{"key":"wind","name":"风向风力","icon":"💨","score":90,"value":"最大3级 · 西北风","advice":"微风轻浪，最佳钓风，抛竿顺畅溶氧足"},{"key":"rain","name":"降水","icon":"🌧️","score":66,"value":"无降水","advice":"无降水，晴天鱼口靠早晚，午间可歇"},{"key":"cloud","name":"云量光照","icon":"⛅","score":70,"value":"平均云量2%","advice":"强光晴天，鱼警惕性高，宜钓深水阴影"}],"species":[{"name":"鲫鱼","score":45,"stars":2,"note":"耐低温，秋末仍稳，红虫饵效佳"},{"name":"鲤鱼","score":39,"stars":1,"note":"秋季囤脂，食量大，玉米薯香常连口"},{"name":"翘嘴","score":36,"stars":1,"note":"昼伏夜出，傍晚亮片/拟饵效果好"},{"name":"黄颡鱼","score":36,"stars":1,"note":"喜暗，夜间或阴天守河边缓流"},{"name":"草鱼","score":30,"stars":1,"note":"喜暖，降温后转深水，宜守发酵饵"},{"name":"鲢鳙","score":30,"stars":1,"note":"喜高温，秋末活性低，需晴暖午间浮钓"}],"wtemp_mean":9.6,"juyu":{"score":72,"stars":3,"verdict":"鲫口平平，抓早晚窗口","segments":[{"name":"早口","range":"05:00-08:00","tip":"鲫鱼靠边觅食，钓浅滩水草边，腥香饵+酒米打窝，抓下顿"},{"name":"上午","range":"08:00-11:00","tip":"口渐稀，可钓深浅交界，少量补窝守钓"},{"name":"午间","range":"11:00-14:00","tip":"停口时段，钓深水遮阴或歇竿，避开强光"},{"name":"下午","range":"14:00-17:00","tip":"口回升，逐步向浅滩移竿，拉饵诱钓结合"},{"name":"晚口","range":"17:00-20:00","tip":"全天黄金窗口，鲫鱼集群靠边，拉饵抽频率"},{"name":"夜间","range":"20:00-05:00","tip":"夏季可钓，秋冬夜间停口，收竿休息"}],"gear":{"line":"主线0.6 + 子线0.3","hook":"袖钩3号（无倒刺）","bait":"红虫/蚯蚓，或浓腥商品饵","depth":"钓深2.5-3.5米，找缓流深潭","tone":"腥味为主，加虾粉提鲜","adjust":"调四钓二偏钝，抓小口、防闹"},"notes":["微风适宜：溶氧足，食物聚下风口，优先下风口1-2米","水温偏低：鲫鱼活性下降，小钩细线红虫，抓轻口"],"hours":[58,57,57,55,57,71,71,70,70,67,65,73,72,72,71,72,73,77,79,79,65,62,60,57]},"carp":{"score":65,"stars":3,"verdict":"鲤口平平，早晚碰碰运气","strategy":"低温鲤鱼懒动：红虫/蚯蚓逗钓，选午间浅滩","best_windows":[{"start":"13:00","end":"15:00","score":70,"label":"13:00-15:00"},{"start":"15:00","end":"17:00","score":72,"label":"15:00-17:00"}],"hours":[58,58,58,56,59,62,63,61,62,65,63,64,63,71,70,72,72,67,68,66,63,60,58,56]},"catfish":{"score":64,"stars":3,"verdict":"鲶口平平，后半夜试试","strategy":"低温鲶鱼休眠，收竿改日","best_windows":[{"start":"00:00","end":"02:00","score":70,"label":"00:00-02:00"},{"start":"21:00","end":"23:00","score":68,"label":"21:00-23:00"}],"hours":[71,69,64,59,58,57,59,55,50,52,51,51,50,57,57,59,60,56,61,64,66,67,68,68]},"hours":[{"h":0,"score":57,"temp":6.3,"wind":2.9,"wdir":"西南风","wlv":2,"rain":0.0,"wtemp":8.9,"press_d":-0.7,"cloud":29,"hum":53},{"h":1,"score":56,"temp":6.1,"wind":3.2,"wdir":"西南风","wlv":2,"rain":0.0,"wtemp":8.8,"press_d":-0.6,"cloud":13,"hum":55},{"h":2,"score":50,"temp":5.8,"wind":3.3,"wdir":"西南风","wlv":2,"rain":0.0,"wtemp":8.6,"press_d":-0.5,"cloud":2,"hum":57},{"h":3,"score":47,"temp":5.4,"wind":3.2,"wdir":"西风","wlv":2,"rain":0.0,"wtemp":8.4,"press_d":-0.3,"cloud":0,"hum":59},{"h":4,"score":47,"temp":4.8,"wind":3.0,"wdir":"西风","wlv":2,"rain":0.0,"wtemp":8.1,"press_d":0.0,"cloud":0,"hum":63},{"h":5,"score":71,"temp":4.2,"wind":2.9,"wdir":"西风","wlv":2,"rain":0.0,"wtemp":7.7,"press_d":0.3,"cloud":0,"hum":66},{"h":6,"score":71,"temp":3.8,"wind":2.7,"wdir":"西风","wlv":2,"rain":0.0,"wtemp":7.5,"press_d":0.4,"cloud":0,"hum":68},{"h":7,"score":69,"temp":3.7,"wind":2.7,"wdir":"西风","wlv":2,"rain":0.0,"wtemp":7.5,"press_d":0.5,"cloud":0,"hum":68},{"h":8,"score":61,"temp":4.1,"wind":2.8,"wdir":"西风","wlv":2,"rain":0.0,"wtemp":7.7,"press_d":0.3,"cloud":0,"hum":64},{"h":9,"score":61,"temp":5.2,"wind":2.9,"wdir":"西北风","wlv":2,"rain":0.0,"wtemp":8.3,"press_d":0.1,"cloud":0,"hum":56},{"h":10,"score":67,"temp":6.9,"wind":3.3,"wdir":"西北风","wlv":2,"rain":0.0,"wtemp":9.2,"press_d":-0.3,"cloud":0,"hum":45},{"h":11,"score":59,"temp":9.0,"wind":3.5,"wdir":"西北风","wlv":3,"rain":0.0,"wtemp":10.4,"press_d":-0.5,"cloud":0,"hum":35},{"h":12,"score":64,"temp":11.0,"wind":3.8,"wdir":"西北风","wlv":3,"rain":0.0,"wtemp":11.5,"press_d":-0.6,"cloud":0,"hum":28},{"h":13,"score":64,"temp":12.6,"wind":3.9,"wdir":"西北风","wlv":3,"rain":0.0,"wtemp":12.4,"press_d":-0.5,"cloud":0,"hum":23},{"h":14,"score":66,"temp":13.4,"wind":4.0,"wdir":"西北风","wlv":3,"rain":0.0,"wtemp":12.8,"press_d":-0.2,"cloud":0,"hum":21},{"h":15,"score":66,"temp":13.2,"wind":3.8,"wdir":"西北风","wlv":3,"rain":0.0,"wtemp":12.7,"press_d":0.3,"cloud":0,"hum":21},{"h":16,"score":64,"temp":12.4,"wind":3.5,"wdir":"西北风","wlv":3,"rain":0.0,"wtemp":12.2,"press_d":0.9,"cloud":0,"hum":24},{"h":17,"score":79,"temp":11.1,"wind":3.1,"wdir":"西北风","wlv":2,"rain":0.0,"wtemp":11.5,"press_d":1.4,"cloud":0,"hum":28},{"h":18,"score":74,"temp":9.7,"wind":2.7,"wdir":"西北风","wlv":2,"rain":0.0,"wtemp":10.8,"press_d":1.8,"cloud":0,"hum":34},{"h":19,"score":74,"temp":8.4,"wind":2.1,"wdir":"西北风","wlv":2,"rain":0.0,"wtemp":10.0,"press_d":1.9,"cloud":0,"hum":40},{"h":20,"score":65,"temp":7.4,"wind":1.6,"wdir":"西北风","wlv":1,"rain":0.0,"wtemp":9.5,"press_d":1.8,"cloud":0,"hum":44},{"h":21,"score":65,"temp":6.7,"wind":1.0,"wdir":"西北风","wlv":1,"rain":0.0,"wtemp":9.1,"press_d":1.5,"cloud":0,"hum":47},{"h":22,"score":65,"temp":6.1,"wind":1.0,"wdir":"东北风","wlv":1,"rain":0.0,"wtemp":8.8,"press_d":1.3,"cloud":0,"hum":49},{"h":23,"score":45,"temp":5.6,"wind":1.9,"wdir":"东北风","wlv":2,"rain":0.0,"wtemp":8.5,"press_d":1.1,"cloud":0,"hum":50}]},{"date":"2026-11-09","label":"周一","weekday":"周一","is_today":false,"is_past":false,"score":79,"rating":["A","宜钓","综合鱼口偏好，值得出钓"],"weather":["晴","☀️"],"tmax":14.5,"tmin":3.4,"tmean":8.3,"wind_max":5.0,"wind_level":3,"wind_dir":"西南风","rain_sum":0.0,"cloud_mean":1,"hum_mean":46,"press_delta":-8.7,"sunrise":"06:44","sunset":"16:57","best_windows":[{"start":"14:00","end":"16:00","score":73,"label":"14:00-16:00"},{"start":"17:00","end":"19:00","score":84,"label":"17:00-19:00"},{"start":"19:00","end":"21:00","score":77,"label":"19:00-21:00"}],"factors":[{"key":"temp","name":"气温水温","icon":"🌡️","score":65,"value":"3.4~14.5℃ · 均8.3℃","advice":"温度偏凉，鱼口平稳，早晚集中在浅水"},{"key":"press","name":"气压趋势","icon":"📊","score":95,"value":"全日-8.7 hPa","advice":"气压快速下降，鱼大量游动觅食，全天口好"},{"key":"wind","name":"风向风力","icon":"💨","score":76,"value":"最大3级 · 西南风","advice":"微风轻浪，最佳钓风，抛竿顺畅溶氧足"},{"key":"rain","name":"降水","icon":"🌧️","score":66,"value":"无降水","advice":"无降水，晴天鱼口靠早晚，午间可歇"},{"key":"cloud","name":"云量光照","icon":"⛅","score":70,"value":"平均云量1%","advice":"强光晴天，鱼警惕性高，宜钓深水阴影"}],"species":[{"name":"鲫鱼","score":47,"stars":2,"note":"耐低温，秋末仍稳，红虫饵效佳"},{"name":"鲤鱼","score":41,"stars":1,"note":"秋季囤脂，食量大，玉米薯香常连口"},{"name":"翘嘴","score":38,"stars":1,"note":"昼伏夜出，傍晚亮片/拟饵效果好"},{"name":"黄颡鱼","score":38,"stars":1,"note":"喜暗，夜间或阴天守河边缓流"},{"name":"草鱼","score":30,"stars":1,"note":"喜暖，降温后转深水，宜守发酵饵"},{"name":"鲢鳙","score":30,"stars":1,"note":"喜高温，秋末活性低，需晴暖午间浮钓"}],"wtemp_mean":10.3,"juyu":{"score":74,"stars":4,"verdict":"鲫口偏好，值得出钓","segments":[{"name":"早口","range":"05:00-08:00","tip":"鲫鱼靠边觅食，钓浅滩水草边，腥香饵+酒米打窝，抓下顿"},{"name":"上午","range":"08:00-11:00","tip":"口渐稀，可钓深浅交界，少量补窝守钓"},{"name":"午间","range":"11:00-14:00","tip":"停口时段，钓深水遮阴或歇竿，避开强光"},{"name":"下午","range":"14:00-17:00","tip":"口回升，逐步向浅滩移竿，拉饵诱钓结合"},{"name":"晚口","range":"17:00-20:00","tip":"全天黄金窗口，鲫鱼集群靠边，拉饵抽频率"},{"name":"夜间","range":"20:00-05:00","tip":"夏季可钓，秋冬夜间停口，收竿休息"}],"gear":{"line":"主线0.8 + 子线0.4","hook":"袖钩4号","bait":"腥香商品饵 / 蚯蚓，酒米打窝","depth":"钓深1.5-2.5米，水草边优先","tone":"腥香各半","adjust":"调四钓二，抓下顿半目"},"notes":["微风适宜：溶氧足，食物聚下风口，优先下风口1-2米"],"hours":[54,54,53,53,52,66,71,72,70,68,76,72,74,73,73,75,77,81,83,82,78,75,72,60]},"carp":{"score":69,"stars":3,"verdict":"鲤口平平，早晚碰碰运气","strategy":"低温鲤鱼懒动：红虫/蚯蚓逗钓，选午间浅滩","best_windows":[{"start":"15:00","end":"17:00","score":76,"label":"15:00-17:00"},{"start":"17:00","end":"19:00","score":79,"label":"17:00-19:00"}],"hours":[55,54,54,54,54,56,63,70,68,66,64,62,71,72,73,75,76,79,79,70,67,64,62,60]},"catfish":{"score":65,"stars":3,"verdict":"鲶口平平，后半夜试试","strategy":"低温鲶鱼休眠，收竿改日","best_windows":[{"start":"20:00","end":"22:00","score":70,"label":"20:00-22:00"},{"start":"22:00","end":"00:00","score":71,"label":"22:00-00:00"}],"hours":[68,66,61,57,55,54,59,61,55,53,52,52,58,58,59,61,63,66,70,67,69,70,71,71]},"hours":[{"h":0,"score":45,"temp":5.2,"wind":2.9,"wdir":"东北风","wlv":2,"rain":0.0,"wtemp":8.6,"press_d":1.0,"cloud":0,"hum":50},{"h":1,"score":45,"temp":4.9,"wind":3.8,"wdir":"东风","wlv":3,"rain":0.0,"wtemp":8.4,"press_d":0.8,"cloud":0,"hum":50},{"h":2,"score":45,"temp":4.7,"wind":4.4,"wdir":"东风","wlv":3,"rain":0.0,"wtemp":8.3,"press_d":0.7,"cloud":0,"hum":51},{"h":3,"score":45,"temp":4.4,"wind":4.8,"wdir":"东风","wlv":3,"rain":0.0,"wtemp":8.2,"press_d":0.6,"cloud":0,"hum":52},{"h":4,"score":45,"temp":4.1,"wind":5.0,"wdir":"东风","wlv":3,"rain":0.0,"wtemp":8.0,"press_d":0.5,"cloud":0,"hum":55},{"h":5,"score":67,"temp":3.9,"wind":5.0,"wdir":"东风","wlv":3,"rain":0.0,"wtemp":7.9,"press_d":0.5,"cloud":0,"hum":57},{"h":6,"score":71,"temp":3.9,"wind":4.9,"wdir":"东风","wlv":3,"rain":0.0,"wtemp":7.9,"press_d":0.3,"cloud":0,"hum":59},{"h":7,"score":71,"temp":4.1,"wind":4.5,"wdir":"东风","wlv":3,"rain":0.0,"wtemp":8.0,"press_d":0.1,"cloud":0,"hum":59},{"h":8,"score":61,"temp":4.7,"wind":4.0,"wdir":"东风","wlv":3,"rain":0.0,"wtemp":8.3,"press_d":-0.3,"cloud":0,"hum":58},{"h":9,"score":70,"temp":6.0,"wind":3.0,"wdir":"东风","wlv":2,"rain":0.0,"wtemp":9.0,"press_d":-0.9,"cloud":0,"hum":54},{"h":10,"score":69,"temp":7.8,"wind":1.6,"wdir":"东风","wlv":2,"rain":0.0,"wtemp":10.0,"press_d":-1.7,"cloud":0,"hum":48},{"h":11,"score":58,"temp":9.9,"wind":0.6,"wdir":"南风","wlv":1,"rain":0.0,"wtemp":11.2,"press_d":-2.5,"cloud":0,"hum":41},{"h":12,"score":65,"temp":11.9,"wind":1.9,"wdir":"西南风","wlv":2,"rain":0.0,"wtemp":12.3,"press_d":-3.0,"cloud":0,"hum":36},{"h":13,"score":65,"temp":13.6,"wind":3.3,"wdir":"西南风","wlv":2,"rain":0.0,"wtemp":13.2,"press_d":-3.1,"cloud":0,"hum":32},{"h":14,"score":73,"temp":14.4,"wind":4.3,"wdir":"西南风","wlv":3,"rain":0.0,"wtemp":13.7,"press_d":-2.9,"cloud":0,"hum":31},{"h":15,"score":73,"temp":14.4,"wind":4.7,"wdir":"西南风","wlv":3,"rain":0.0,"wtemp":13.7,"press_d":-2.4,"cloud":0,"hum":31},{"h":16,"score":69,"temp":13.8,"wind":4.7,"wdir":"西南风","wlv":3,"rain":0.0,"wtemp":13.3,"press_d":-1.8,"cloud":1,"hum":33},{"h":17,"score":84,"temp":12.7,"wind":4.5,"wdir":"西南风","wlv":3,"rain":0.0,"wtemp":12.7,"press_d":-1.4,"cloud":2,"hum":36},{"h":18,"score":84,"temp":11.5,"wind":4.2,"wdir":"西南风","wlv":3,"rain":0.0,"wtemp":12.1,"press_d":-1.2,"cloud":2,"hum":39},{"h":19,"score":84,"temp":10.3,"wind":4.0,"wdir":"西南风","wlv":3,"rain":0.0,"wtemp":11.4,"press_d":-1.1,"cloud":3,"hum":43},{"h":20,"score":70,"temp":9.4,"wind":3.8,"wdir":"西南风","wlv":3,"rain":0.0,"wtemp":10.9,"press_d":-1.1,"cloud":3,"hum":46},{"h":21,"score":70,"temp":8.7,"wind":3.9,"wdir":"西南风","wlv":3,"rain":0.0,"wtemp":10.5,"press_d":-1.1,"cloud":3,"hum":47},{"h":22,"score":70,"temp":8.1,"wind":4.0,"wdir":"西南风","wlv":3,"rain":0.0,"wtemp":10.2,"press_d":-1.3,"cloud":3,"hum":49},{"h":23,"score":55,"temp":7.6,"wind":4.1,"wdir":"西南风","wlv":3,"rain":0.0,"wtemp":9.9,"press_d":-1.4,"cloud":3,"hum":49}]}],"references":[{"icon":"📅","title":"最佳出钓日","text":"未来7天中 <b>周三（11-04）</b> 综合鱼情指数最高（82分，宜钓），优先安排这一天。"},{"icon":"⏰","title":"今日黄金时段","text":"今日尚可把握的窗口：<b>19:00-21:00</b>。早口（14:00-16:00）已过，午间（11-14点）口差，傍晚再战。"},{"icon":"📊","title":"看气压下竿","text":"今日气压全日+0.3 hPa。气压上升鱼口趋缓，只抓早晚、中午收竿。 出钓前可再看一眼实时气压，下降趋势就果断下竿。"},{"icon":"💨","title":"选风选位","text":"今日最大3级（西风）。微风最佳，选下风口溶氧高。 忌迎风抛竿。"},{"icon":"🐟","title":"鱼种与用饵","text":"当前时节以<b>鲫鱼、鲤鱼</b>为主攻对象（指数最高），饵料用红虫/蚯蚓或腥香饵；翘嘴宜傍晚用亮片；鲢鳙活性低，非晴暖午间不推荐。"},{"icon":"🎣","title":"早晚钓浅午钓深","text":"秋末早晚凉、午间暖，鱼随温度迁徙：早晚钓浅滩（1.5-2米），午间钓深水（3米+）。降温当天反而常出好口，注意把握。"}],"best_day":"2026-11-04","wind_ratio":0.35,"wind_obs_ms":3.6,"wind_note":"风力已按本地实况校准（城区湖岸折减）"};   // 内置快照（兜底）
+var DATA = INJECTED;             // 当前数据源
+var cur = 1, pickedHour = null;
+
+var API_URL = 'https://api.open-meteo.com/v1/forecast'
+  + '?latitude=39.5835&longitude=118.1997'
+  + '&timezone=Asia%2FShanghai&past_days=1&forecast_days=8'
+  + '&hourly=temperature_2m,relative_humidity_2m,precipitation,weather_code,cloud_cover,surface_pressure,wind_speed_10m,wind_direction_10m'
+  + '&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum,wind_speed_10m_max,sunrise,sunset';
+
+/* ---------- 基础工具 ---------- */
+function scoreColor(s){
+  if(s>=85) return '#fbbf24';
+  if(s>=75) return '#34d399';
+  if(s>=60) return '#a3e635';
+  if(s>=45) return '#fb923c';
+  return '#94a3b8';
+}
+function pad(n){ return (n<10?'0':'')+n; }
+function fmtH(h){ return pad(h)+':00'; }
+function ratingOf(s){
+  if(s>=85) return ['S','爆护','鱼口旺盛，抓紧下竿'];
+  if(s>=75) return ['A','宜钓','综合鱼口偏好，值得出钓'];
+  if(s>=60) return ['B','一般','鱼口平平，需抓对时段'];
+  if(s>=45) return ['C','较差','鱼口偏弱，建议碰碰早口'];
+  return ['D','不宜','诸因子不利，改日再战'];
+}
+function weekdayOf(ds){
+  var y=+ds.slice(0,4), m=+ds.slice(5,7), d=+ds.slice(8,10);
+  return '周'+'日一二三四五六'.charAt(new Date(Date.UTC(y,m-1,d)).getUTCDay());
+}
+function bjNow(){
+  var d = new Date(Date.now() + 8*3600e3);   // 固定按北京时间
+  var iso = d.toISOString();
+  return { date: iso.slice(0,10), hour: d.getUTCHours(), str: iso.slice(0,16).replace('T',' ') };
+}
+
+/* ============================================================
+   鱼情指数模型（与生成端一致的 JS 移植版）
+   ============================================================ */
+var WMO = {0:['晴','☀️'],1:['晴间多云','🌤️'],2:['多云','⛅'],3:['阴','☁️'],
+  45:['雾','🌫️'],48:['雾凇','🌫️'],51:['毛毛雨','🌦️'],53:['毛毛雨','🌦️'],55:['毛毛雨','🌦️'],
+  56:['冻雨','🌧️'],57:['冻雨','🌧️'],61:['小雨','🌧️'],63:['中雨','🌧️'],65:['大雨','🌧️'],
+  66:['冻雨','🌧️'],67:['冻雨','🌧️'],71:['小雪','🌨️'],73:['中雪','🌨️'],75:['大雪','🌨️'],
+  77:['雪粒','🌨️'],80:['阵雨','🌦️'],81:['阵雨','🌦️'],82:['强阵雨','🌧️'],
+  85:['阵雪','🌨️'],86:['阵雪','🌨️'],95:['雷阵雨','⛈️'],96:['雷雨冰雹','⛈️'],99:['雷雨冰雹','⛈️']};
+function wmo(c){ return WMO[c] || ['多云','⛅']; }
+function windDir(deg){
+  return ['北风','东北风','东风','东南风','南风','西南风','西风','西北风'][Math.floor((deg+22.5)%360/45)];
+}
+function windLevel(ms){
+  var t=[0.3,1.6,3.4,5.5,8,10.8,13.9,17.2,20.8,24.5,28.5,32.7], lv=0;
+  for(var i=0;i<t.length;i++) if(ms>=t[i]) lv=i+1;
+  return lv;
+}
+/* 水温估算（水体热惯性模型）：日内振幅衰减为气温的0.55倍，围绕当日均温波动 + 季节偏移
+   秋冬水体储热释放高于气温，春夏升温慢于气温 */
+function wtempOffset(dateStr){
+  var m=+dateStr.slice(5,7);
+  if(m<=2||m===12) return 2.5;
+  if(m<=5) return 1.0;
+  if(m<=8) return -0.5;
+  return 2.0;
+}
+function waterTemp(air,tmean,dateStr){
+  return Math.round((0.55*air+0.45*tmean+wtempOffset(dateStr))*10)/10;
+}
+function tempScore(t){
+  if(t<2)return 25; if(t<6)return 45; if(t<10)return 65; if(t<14)return 80;
+  if(t<18)return 90; if(t<22)return 96; if(t<26)return 90; if(t<30)return 72; return 50;
+}
+function pressScore(d){
+  if(d<=-2)return 95; if(d<=-0.5)return 88; if(d<0.5)return 74; if(d<2)return 60; if(d<4)return 45; return 32;
+}
+function windScore(ms){
+  if(ms<1)return 70; if(ms<2.5)return 88; if(ms<5)return 90; if(ms<8)return 76; if(ms<11)return 55; return 35;
+}
+function rainScore(mm){
+  if(mm<=0)return 66; if(mm<0.5)return 90; if(mm<2)return 86; if(mm<6)return 68; if(mm<15)return 45; return 30;
+}
+function cloudScore(c){ if(c<20)return 70; if(c<45)return 78; if(c<80)return 88; return 76; }
+function humScore(h){ if(h>=50&&h<=80)return 85; if(h<50)return 72; if(h<=90)return 80; return 64; }
+function timeFactor(h){
+  if(h>=5&&h<=7)return 12; if(h>=8&&h<=10)return 2; if(h>=11&&h<=13)return -8;
+  if(h>=14&&h<=16)return -3; if(h>=17&&h<=19)return 12; if(h>=20&&h<=22)return 3; return -12;
+}
+function hourScore(h,temp,pd,wind,rain,cloud,hum){
+  var s = 0.30*tempScore(temp)+0.18*pressScore(pd)+0.14*windScore(wind)
+        + 0.12*rainScore(rain)+0.10*cloudScore(cloud)+0.06*humScore(hum)+timeFactor(h);
+  return Math.max(5, Math.min(98, Math.round(s)));
+}
+function bestWindows(hours){
+  var cands=[];
+  for(var s=3;s<22;s++){
+    var seg=hours.filter(function(x){return x.h>=s&&x.h<s+2;});
+    if(seg.length===2) cands.push([s,s+2,Math.round((seg[0].score+seg[1].score)/2)]);
+  }
+  cands.sort(function(a,b){return b[2]-a[2];});
+  var picked=[];
+  for(var i=0;i<cands.length&&picked.length<3;i++){
+    var ok=true;
+    for(var j=0;j<picked.length;j++){
+      if(!(cands[i][1]<=picked[j][0]||cands[i][0]>=picked[j][1])){ok=false;break;}
+    }
+    if(ok) picked.push(cands[i]);
+  }
+  picked.sort(function(a,b){return a[0]-b[0];});
+  return picked.map(function(w){
+    return {start:fmtH(w[0]), end:fmtH(w[1]), score:w[2], label:fmtH(w[0])+'-'+fmtH(w[1])};
+  });
+}
+function factorAdvice(key,kw){
+  if(key==='temp'){
+    var t=kw.mean;
+    if(t<8) return '水温偏低，鱼活性下降，宜钓浅滩、小钩细线';
+    if(t<14) return '温度偏凉，鱼口平稳，早晚集中在浅水';
+    if(t<20) return '温度适宜，鱼食欲旺盛，全天有口';
+    if(t<26) return '温暖舒适，鱼口活跃，注意避午间闷热';
+    return '气温偏高，鱼易上浮，宜钓浮或早晚';
+  }
+  if(key==='press'){
+    var dd=kw.delta;
+    if(dd<=-2) return '气压快速下降，鱼大量游动觅食，全天口好';
+    if(dd<=-0.5) return '气压缓降，鱼口渐开，利于钓底';
+    if(dd<0.5) return '气压平稳，鱼口正常，按常规策略作钓';
+    if(dd<2) return '气压缓升，鱼口趋缓，宜抓早口晚口';
+    return '气压快速上升，鱼难开口，建议守早口或改日';
+  }
+  if(key==='wind'){
+    var lv=kw.level;
+    if(lv<=1) return '风平浪静，鱼易上浮，宜钓浮或钓早晚';
+    if(lv<=3) return '微风轻浪，最佳钓风，抛竿顺畅溶氧足';
+    if(lv<=5) return '风浪渐大，宜钓背风湾，加大铅坠抗流';
+    return '大风天不宜出钓，注意安全，择背风水域';
+  }
+  if(key==='rain'){
+    var r=kw.sum;
+    if(r<=0) return '无降水，晴天鱼口靠早晚，午间可歇';
+    if(r<0.5) return '小雨天气，溶氧充足，鱼口偏好';
+    if(r<2) return '小雨绵绵，鱼靠边觅食，宜钓浅';
+    if(r<6) return '中雨，鱼口转差，注意避雷防滑';
+    return '大雨，不宜出钓，注意安全';
+  }
+  if(key==='cloud'){
+    var c=kw.mean;
+    if(c<20) return '强光晴天，鱼警惕性高，宜钓深水阴影';
+    if(c<45) return '少云，光线柔和，鱼口正常';
+    if(c<80) return '多云/阴天，弱光环境鱼大胆，鱼口偏好';
+    return '全天阴沉，光线暗，鱼靠边，宜钓浅';
+  }
+  return '';
+}
+var SPECIES = [
+  ['鲫鱼',12,24,3,'耐低温，秋末仍稳，红虫饵效佳'],
+  ['鲤鱼',14,26,3,'秋季囤脂，食量大，玉米薯香常连口'],
+  ['草鱼',17,28,-5,'喜暖，降温后转深水，宜守发酵饵'],
+  ['鲢鳙',20,30,-8,'喜高温，秋末活性低，需晴暖午间浮钓'],
+  ['翘嘴',14,26,0,'昼伏夜出，傍晚亮片/拟饵效果好'],
+  ['黄颡鱼',14,26,0,'喜暗，夜间或阴天守河边缓流']
+];
+function speciesScores(meanTemp){
+  var out=[];
+  for(var i=0;i<SPECIES.length;i++){
+    var sp=SPECIES[i], lo=sp[1], hi=sp[2], base;
+    if(meanTemp<=lo) base=55+(meanTemp-lo)*3;
+    else if(meanTemp>=hi) base=78-(meanTemp-hi)*4;
+    else base=92-Math.abs(meanTemp-(lo+hi)/2)*1.6;
+    var s=Math.max(30,Math.min(97,Math.round(base+sp[3])));
+    var stars = s>=85?5:s>=74?4:s>=60?3:s>=45?2:1;
+    out.push({name:sp[0],score:s,stars:stars,note:sp[4]});
+  }
+  out.sort(function(a,b){return b.score-a.score;});
+  return out;
+}
+/* ================= 台钓鲫鱼专属模型 ================= */
+function crucianHourScore(wtemp,h,pressD,wind,rain){
+  /* 水温40% + 时段25% + 气压15% + 风10% + 降水10% */
+  var t;
+  if(wtemp<5) t=25;
+  else if(wtemp<10) t=55;
+  else if(wtemp<15) t=78;
+  else if(wtemp<=25) t=96-Math.abs(wtemp-20)*1.2;
+  else if(wtemp<28) t=70;
+  else t=45;
+  var timeMap={5:85,6:88,7:90,8:82,9:70,10:62,11:52,12:48,13:46,14:48,
+               15:55,16:68,17:82,18:90,19:88,20:70,21:58,22:48,23:38,
+               0:30,1:26,2:24,3:24,4:30};
+  var p;
+  if(pressD<=-2) p=95;
+  else if(pressD<=-0.5) p=88;
+  else if(pressD<0.5) p=78;
+  else if(pressD<2) p=62;
+  else p=45;
+  var wd;
+  if(wind<1) wd=62;
+  else if(wind<2.5) wd=92;
+  else if(wind<5) wd=85;
+  else if(wind<8) wd=60;
+  else wd=35;
+  var rn;
+  if(rain<=0) rn=72;
+  else if(rain<0.5) rn=95;
+  else if(rain<2) rn=88;
+  else if(rain<6) rn=55;
+  else rn=35;
+  var s=0.40*t+0.25*timeMap[h]+0.15*p+0.10*wd+0.10*rn;
+  return Math.max(30,Math.min(98,Math.round(s)));
+}
+function crucianGear(wtemp){
+  if(wtemp<10) return {line:'主线0.6 + 子线0.3',hook:'袖钩3号（无倒刺）',
+    bait:'红虫/蚯蚓，或浓腥商品饵',depth:'钓深2.5-3.5米，找缓流深潭',
+    tone:'腥味为主，加虾粉提鲜',adjust:'调四钓二偏钝，抓小口、防闹'};
+  if(wtemp<18) return {line:'主线0.8 + 子线0.4',hook:'袖钩4号',
+    bait:'腥香商品饵 / 蚯蚓，酒米打窝',depth:'钓深1.5-2.5米，水草边优先',
+    tone:'腥香各半',adjust:'调四钓二，抓下顿半目'};
+  if(wtemp<=25) return {line:'主线1.0 + 子线0.5',hook:'袖钩4-5号',
+    bait:'谷物香/薯香商品饵，搓拉结合',depth:'钓深1.2-2米，深浅交界',
+    tone:'本味带香，少腥防小鱼',adjust:'调五钓三或钓钝，过滤小口'};
+  return {line:'主线1.2 + 子线0.6',hook:'袖钩5号',
+    bait:'清淡本味/发酵玉米，早晚出钓',depth:'钓深2-3米或钓荫、钓浮',
+    tone:'淡味为主',adjust:'钓钝防闹，抓死口'};
+}
+function crucianPlan(hours,wtempMean){
+  var scores=hours.map(function(x){return crucianHourScore(x.wtemp,x.h,x.press_d,x.wind,x.rain);});
+  var daySum=0,dayCnt=0;
+  hours.forEach(function(x,i){ if(x.h>=5&&x.h<=20){daySum+=scores[i];dayCnt++;} });
+  var dayScore=Math.round(daySum/dayCnt);
+  var segs=[
+    {name:'早口',range:'05:00-08:00',tip:'鲫鱼靠边觅食，钓浅滩水草边，腥香饵+酒米打窝，抓下顿'},
+    {name:'上午',range:'08:00-11:00',tip:'口渐稀，可钓深浅交界，少量补窝守钓'},
+    {name:'午间',range:'11:00-14:00',tip:'停口时段，钓深水遮阴或歇竿，避开强光'},
+    {name:'下午',range:'14:00-17:00',tip:'口回升，逐步向浅滩移竿，拉饵诱钓结合'},
+    {name:'晚口',range:'17:00-20:00',tip:'全天黄金窗口，鲫鱼集群靠边，拉饵抽频率'},
+    {name:'夜间',range:'20:00-05:00',tip:'夏季可钓，秋冬夜间停口，收竿休息'}
+  ];
+  var notes=[],wmax=0,pd,rsum=0;
+  hours.forEach(function(x){if(x.wind>wmax)wmax=x.wind; rsum+=x.rain;});
+  pd=hours[23].press_d;
+  if(pd<=-2) notes.push('气压快速下降：鲫鱼全天游动觅食，主动钓底、拉饵作窝');
+  else if(pd>=2) notes.push('气压快速上升：鲫鱼难开口，只守早口晚口或改日');
+  if(windLevel(wmax)>=5) notes.push('有5级以上阵风：水浑浪大，改背风湾、加大铅坠、钓钝抓死口');
+  else if(wmax<=1) notes.push('基本无风：溶氧偏低，鲫鱼易上浮，宜钓浮或早晚出钓');
+  else notes.push('微风适宜：溶氧足，食物聚下风口，优先下风口1-2米');
+  if(rsum>0.5) notes.push('有小雨：弱光溶氧足，鲫鱼大胆靠边，全天可钓、钓浅为主');
+  if(wtempMean<10) notes.push('水温偏低：鲫鱼活性下降，小钩细线红虫，抓轻口');
+  else if(wtempMean>25) notes.push('水温偏高：鲫鱼上浮避暑，早晚出钓或钓荫钓浮');
+  var stars=dayScore>=85?5:dayScore>=74?4:dayScore>=60?3:dayScore>=45?2:1;
+  var verdict=dayScore>=85?'鲫口旺盛，拉饵抽窝连口':dayScore>=74?'鲫口偏好，值得出钓':
+    dayScore>=60?'鲫口平平，抓早晚窗口':dayScore>=45?'鲫口偏弱，守早口试钓':'鲫口很差，建议改日';
+  return {score:dayScore,stars:stars,verdict:verdict,segments:segs,
+    gear:crucianGear(wtempMean),notes:notes,hours:scores};
+}
+/* ---------- 辅助鱼种：鲤鱼 / 鲶鱼（小时级参考，非主目标；与生成端一致） ---------- */
+function carpHourScore(wtemp,h,pressD,wind,rain){
+  /* 鲤鱼：耐暖喜风浪浑水，早晚口重 */
+  var t;
+  if(wtemp<8) t=30; else if(wtemp<12) t=48; else if(wtemp<18) t=70;
+  else if(wtemp<=26) t=92; else if(wtemp<30) t=68; else t=45;
+  var timeMap={5:80,6:86,7:86,8:80,9:68,10:60,11:56,12:54,13:54,14:58,
+               15:66,16:76,17:86,18:88,19:84,20:70,21:60,22:50,23:42,
+               0:36,1:32,2:32,3:34,4:44};
+  var p;
+  if(pressD<=-2) p=95; else if(pressD<=-0.5) p=88; else if(pressD<0.5) p=78;
+  else if(pressD<2) p=62; else p=45;
+  var w;
+  if(wind<1) w=62; else if(wind<2.5) w=85; else if(wind<5) w=90;
+  else if(wind<8) w=62; else w=40;
+  var r;
+  if(rain<=0) r=70; else if(rain<2) r=88; else if(rain<6) r=78; else r=42;
+  var s=0.35*t+0.25*timeMap[h]+0.15*p+0.10*w+0.15*r;
+  return Math.max(30,Math.min(97,Math.round(s)));
+}
+function catfishHourScore(wtemp,h,pressD,wind,rain){
+  /* 鲶鱼：夜行性，20-02时黄金，喜暖喜弱光浑水 */
+  var t;
+  if(wtemp<8) t=25; else if(wtemp<12) t=40; else if(wtemp<18) t=62;
+  else if(wtemp<24) t=88; else if(wtemp<=28) t=95; else t=70;
+  var timeMap={5:72,6:78,7:70,8:52,9:44,10:40,11:38,12:36,13:36,14:38,
+               15:44,16:52,17:62,18:74,19:84,20:90,21:93,22:95,23:96,
+               0:94,1:88,2:76,3:64,4:62};
+  var p;
+  if(pressD<=-2) p=95; else if(pressD<=-0.5) p=88; else if(pressD<0.5) p=78;
+  else if(pressD<2) p=62; else p=45;
+  var w;
+  if(wind<1) w=70; else if(wind<5) w=75; else if(wind<8) w=58; else w=42;
+  var r;
+  if(rain<=0) r=62; else if(rain<2) r=92; else if(rain<6) r=85; else r=50;
+  var s=0.30*t+0.35*timeMap[h]+0.12*p+0.08*w+0.15*r;
+  return Math.max(25,Math.min(98,Math.round(s)));
+}
+function auxPlan(hourFn,hours,wtempMean,activeHours,verdicts,strategies){
+  var scores=hours.map(function(x){return hourFn(x.wtemp,x.h,x.press_d,x.wind,x.rain);});
+  var sum=0,cnt=0;
+  hours.forEach(function(x,i){ if(activeHours.indexOf(x.h)>=0){sum+=scores[i];cnt++;} });
+  var dayScore=Math.round(sum/cnt);
+  /* 最佳窗口：2小时均分 top2（允许跨夜） */
+  var cands=[];
+  for(var s0=0;s0<24;s0++){
+    var i1=(s0+1)%24;
+    cands.push({s:s0,e:(s0+2)%24,sc:Math.round((scores[s0]+scores[i1])/2)});
+  }
+  cands.sort(function(a,b){return b.sc-a.sc;});
+  var picked=[];
+  for(var ci=0;ci<cands.length;ci++){
+    var c=cands[ci],span={};
+    span[c.s]=1;span[(c.s+1)%24]=1;
+    var ok=true;
+    for(var pi=0;pi<picked.length;pi++){
+      var p=picked[pi];
+      if(span[p.s]||span[(p.s+1)%24]){ok=false;break;}
+    }
+    if(ok) picked.push(c);
+    if(picked.length>=2) break;
+  }
+  picked.sort(function(a,b){return a.s-b.s;});
+  var wins=picked.map(function(c){
+    return {start:pad(c.s)+':00',end:pad(c.e)+':00',score:c.sc,
+            label:pad(c.s)+':00-'+pad(c.e)+':00'};
+  });
+  var stars=dayScore>=85?5:dayScore>=74?4:dayScore>=60?3:dayScore>=45?2:1;
+  var verdict=dayScore>=85?verdicts[4]:dayScore>=74?verdicts[3]:
+              dayScore>=60?verdicts[2]:dayScore>=45?verdicts[1]:verdicts[0];
+  var strategy=wtempMean>25?strategies[3]:wtempMean>17?strategies[2]:
+               wtempMean>11?strategies[1]:strategies[0];
+  return {score:dayScore,stars:stars,verdict:verdict,strategy:strategy,
+          best_windows:wins,hours:scores};
+}
+var CARP_VERDICTS=['鲤口很差，今日放弃','鲤口偏弱，主攻鲫鱼','鲤口平平，早晚碰碰运气',
+                   '鲤口偏好，风浪天尤佳','鲤口旺盛，玉米守底可连口'];
+var CARP_STRATEGIES=['低温鲤鱼懒动：红虫/蚯蚓逗钓，选午间浅滩',
+                     '鲤鱼趋温：深浅交界打窝守钓，玉米薯香',
+                     '鲤鱼食旺：发酵玉米/薯香搓饵守底，早晚下竿',
+                     '水温偏高鲤鱼上浮：早晚出钓或钓浮'];
+var CATFISH_VERDICTS=['鲶口极差，低温休眠','鲶口偏弱，白天基本无口','鲶口平平，后半夜试试',
+                      '鲶口偏好，夜钓值得守','鲶口旺盛，夜间下竿有惊喜'];
+var CATFISH_STRATEGIES=['低温鲶鱼休眠，收竿改日',
+                        '鲶鱼活性低：仅傍晚后短窗口，鸡肝逗钓',
+                        '鲶鱼活跃：夜间 21-02 时黄金，鸡肝/猪肝逗钓',
+                        '水温高鲶鱼最旺：通夜可钓，注意防蚊蛇'];
+var CARP_ACTIVE=[5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21];
+var CATFISH_ACTIVE=[18,19,20,21,22,23,0,1,2,3,4,5];
+
+/* 把 Open-Meteo 原始数据计算成页面数据（windRatio: 风力实况校准系数） */
+function computeFromWeather(w, windRatio){
+  var H=w.hourly, D=w.daily;
+  if(!H||!D||!H.time||H.time.length<24) return null;
+  var now=bjNow(), n=H.time.length, press=H.surface_pressure;
+  /* 风力校准：开阔地模式风 × 城区湖岸折减系数（实况锚定，兜底 0.55） */
+  var wr=(typeof windRatio==='number'&&windRatio>0)?windRatio:0.55;
+  var hoursAll=[];
+  for(var i=0;i<n;i++){
+    var ds=H.time[i].slice(0,10), h=+H.time[i].slice(11,13);
+    var pd = i>=3 ? press[i]-press[i-3] : 0;
+    var wind=H.wind_speed_10m[i]*wr;
+    hoursAll.push({ds:ds,h:h,score:hourScore(h,H.temperature_2m[i],pd,wind,
+      H.precipitation[i],H.cloud_cover[i],H.relative_humidity_2m[i]),
+      temp:H.temperature_2m[i],press_d:Math.round(pd*10)/10,
+      wind:Math.round(wind*10)/10,wdir:windDir(H.wind_direction_10m[i]),
+      wlv:windLevel(wind),rain:H.precipitation[i],
+      cloud:H.cloud_cover[i],hum:H.relative_humidity_2m[i]});
+  }
+  var days=[];
+  for(var di=0;di<D.time.length;di++){
+    var dateStr=D.time[di];
+    var hours=hoursAll.filter(function(x){return x.ds===dateStr;});
+    if(hours.length<24) continue;
+    var tmean=Math.round(hours.reduce(function(a,x){return a+x.temp;},0)/24*10)/10;
+    var i0=di*24, i1=di*24+23;
+    var pDelta=Math.round((press[i1]-press[i0])*10)/10;
+    var wmax=Math.max.apply(null,hours.map(function(x){return x.wind;}));
+    var rsum=Math.round(hours.reduce(function(a,x){return a+x.rain;},0)*10)/10;
+    var cmean=Math.round(hours.reduce(function(a,x){return a+x.cloud;},0)/24);
+    var hmean=Math.round(hours.reduce(function(a,x){return a+x.hum;},0)/24);
+    var daylight=hours.filter(function(x){return x.h>=5&&x.h<=21;});
+    var meanDay=Math.round(daylight.reduce(function(a,x){return a+x.score;},0)/daylight.length);
+    var bw=bestWindows(hours);
+    var bestW=bw.reduce(function(a,x){return Math.max(a,x.score);},0);
+    var daily=Math.round(0.4*meanDay+0.6*bestW);
+    var label = di===0?'昨天':(dateStr===now.date?'今天':weekdayOf(dateStr));
+    var mainDir=hours.length>13?hours[13].wdir:hours[0].wdir;
+    var hoursExt=hours.map(function(x){return {h:x.h,score:x.score,temp:x.temp,wind:x.wind,
+      wdir:x.wdir,wlv:x.wlv,rain:x.rain,press_d:x.press_d,cloud:x.cloud,hum:x.hum,
+      wtemp:waterTemp(x.temp,tmean,dateStr)};});
+    var wtempMean=Math.round(hoursExt.reduce(function(a,x){return a+x.wtemp;},0)/24*10)/10;
+    days.push({
+      date:dateStr, label:label, weekday:weekdayOf(dateStr),
+      is_today:dateStr===now.date, is_past:dateStr<now.date,
+      score:daily, rating:ratingOf(daily),
+      weather:wmo(D.weather_code[di]),
+      tmax:D.temperature_2m_max[di], tmin:D.temperature_2m_min[di], tmean:tmean,
+      wind_max:Math.round(wmax*10)/10, wind_level:windLevel(wmax), wind_dir:mainDir,
+      rain_sum:rsum, cloud_mean:cmean, hum_mean:hmean, press_delta:pDelta,
+      sunrise:(D.sunrise[di]||'').slice(11,16), sunset:(D.sunset[di]||'').slice(11,16),
+      best_windows:bw,
+      factors:[
+        {key:'temp',name:'气温水温',icon:'🌡️',score:tempScore(tmean),
+         value:D.temperature_2m_min[di]+'~'+D.temperature_2m_max[di]+'℃ · 均'+tmean+'℃',
+         advice:factorAdvice('temp',{mean:tmean})},
+        {key:'press',name:'气压趋势',icon:'📊',score:pressScore(pDelta),
+         value:'全日'+(pDelta>0?'+':'')+pDelta+' hPa',
+         advice:factorAdvice('press',{delta:pDelta})},
+        {key:'wind',name:'风向风力',icon:'💨',score:windScore(wmax),
+         value:'最大'+windLevel(wmax)+'级 · '+mainDir,
+         advice:factorAdvice('wind',{level:windLevel(wmax)})},
+        {key:'rain',name:'降水',icon:'🌧️',score:rainScore(rsum),
+         value:(rsum<=0?'无降水':rsum+' mm'),
+         advice:factorAdvice('rain',{sum:rsum})},
+        {key:'cloud',name:'云量光照',icon:'⛅',score:cloudScore(cmean),
+         value:'平均云量'+cmean+'%',
+         advice:factorAdvice('cloud',{mean:cmean})}
+      ],
+      species:speciesScores(tmean),
+      wtemp_mean:wtempMean,
+      juyu:crucianPlan(hoursExt,wtempMean),
+      carp:auxPlan(carpHourScore,hoursExt,wtempMean,CARP_ACTIVE,CARP_VERDICTS,CARP_STRATEGIES),
+      catfish:auxPlan(catfishHourScore,hoursExt,wtempMean,CATFISH_ACTIVE,CATFISH_VERDICTS,CATFISH_STRATEGIES),
+      hours:hoursExt
+    });
+  }
+  if(!days.some(function(d){return d.is_today;})) return null;
+
+  /* 开钓参照 */
+  var future=days.filter(function(d){return d.date>=now.date;});
+  var bestDay=future.reduce(function(a,b){return a.score>=b.score?a:b;});
+  var topDays=future.filter(function(x){return x.score>=bestDay.score-2;});
+  var today=days.filter(function(d){return d.is_today;})[0];
+  var refs=[];
+  if(topDays.length>1){
+    refs.push({icon:'📅',title:'最佳出钓日',
+      text:'未来7天中 <b>'+topDays.map(function(x){return x.label+'（'+x.score+'分）';}).join('、')+'</b> 鱼情最佳，优先安排；其余日子按小时级曲线抓早晚窗口。'});
+  }else{
+    refs.push({icon:'📅',title:'最佳出钓日',
+      text:'未来7天中 <b>'+bestDay.label+'（'+bestDay.date.slice(5)+'）</b> 综合鱼情指数最高（'+bestDay.score+'分，'+bestDay.rating[1]+'），优先安排这一天。'});
+  }
+  var remaining=today.best_windows.filter(function(x){return +x.end.slice(0,2)>now.hour;});
+  var passed=today.best_windows.filter(function(x){return +x.end.slice(0,2)<=now.hour;});
+  if(remaining.length){
+    var txt='今日尚可把握的窗口：<b>'+remaining.slice(0,2).map(function(x){return x.label;}).join('、')+'</b>。';
+    txt += passed.length ? '早口（'+passed[0].label+'）已过，午间（11-14点）口差，傍晚再战。'
+                         : '鱼类觅食集中在早晚，午间（11-14点）普遍口差，可休息补窝。';
+    refs.push({icon:'⏰',title:'今日黄金时段',text:txt});
+  }else{
+    refs.push({icon:'⏰',title:'今日黄金时段',
+      text:'今日黄金时段已过，明天请早——清晨窗口全天最佳，建议设好闹钟。'});
+  }
+  var pdt=today.press_delta;
+  refs.push({icon:'📊',title:'看气压下竿',
+    text:'今日气压全日'+(pdt>0?'+':'')+pdt+' hPa。'+(pdt<=0?'气压下降利于鱼开口，宜主动钓底。':'气压上升鱼口趋缓，只抓早晚、中午收竿。')+' 出钓前可再看一眼实时气压，下降趋势就果断下竿。'});
+  refs.push({icon:'💨',title:'选风选位',
+    text:'今日最大'+today.wind_level+'级（'+today.wind_dir+'）。'+(today.wind_level<=3?'微风最佳，选下风口溶氧高。':'风较大，选背风湾、障碍物旁，加大铅坠稳定钓组。')+' 忌迎风抛竿。'});
+  refs.push({icon:'🐟',title:'鱼种与用饵',
+    text:'当前时节以<b>鲫鱼、鲤鱼</b>为主攻对象（指数最高），饵料用红虫/蚯蚓或腥香饵；翘嘴宜傍晚用亮片；鲢鳙活性低，非晴暖午间不推荐。'});
+  refs.push({icon:'🎣',title:'早晚钓浅午钓深',
+    text:'秋末早晚凉、午间暖，鱼随温度迁徙：早晚钓浅滩（1.5-2米），午间钓深水（3米+）。降温当天反而常出好口，注意把握。'});
+
+  return {city:'唐山市', now:now.str, now_hour:now.hour, days:days, references:refs,
+          best_day:bestDay.date, wind_ratio:Math.round(wr*100)/100};
+}
+
+/* ============================================================
+   渲染层
+   ============================================================ */
+function hourAdvice(h){
+  var t=[];
+  if(h.h>=5&&h.h<=7) t.push('清晨鱼靠边觅食，全天黄金档');
+  else if(h.h>=17&&h.h<=19) t.push('黄昏鱼口回升，抓住傍晚窗口');
+  else if(h.h>=11&&h.h<=13) t.push('午间普遍口差，可歇竿补窝');
+  else if(h.h>=20||h.h<=4) t.push('深夜鱼口弱，夜钓可守黄颡');
+  else t.push('白天常规时段，鱼口平稳');
+  if(h.press_d<=-2) t.push('气压快降，鱼活跃抢食');
+  else if(h.press_d>=2) t.push('气压快升，鱼口受抑');
+  if(h.wlv>=6) t.push('风大浪大，抛竿困难注意安全');
+  else if(h.wlv<=1&&h.h>=11&&h.h<=15) t.push('风平浪静，午间鱼易上浮宜钓浮');
+  if(h.rain>=0.5) t.push('有降水，溶氧充足利开口');
+  if(h.cloud>=90&&h.h>=5&&h.h<=17) t.push('阴天弱光，鱼大胆敢靠边');
+  return t.join('；')+'。';
+}
+
+document.getElementById('updTime').textContent = DATA.now;
+
+function renderHero(){
+  var d=DATA.days.filter(function(x){return x.is_today;})[0]||DATA.days[1];
+  var r=d.rating;
+  document.getElementById('gScore').textContent=d.score;
+  document.getElementById('gScore').style.color=scoreColor(d.score);
+  var badge=document.getElementById('rBadge');
+  badge.innerHTML='<span>'+d.weather[1]+'</span><span>'+r[1]+'</span><span style="font-size:11px;opacity:.85">'+r[0]+' 级</span>';
+  badge.style.background=scoreColor(d.score)+'22';
+  badge.style.border='1px solid '+scoreColor(d.score)+'66';
+  badge.style.color=scoreColor(d.score);
+  document.getElementById('rSummary').innerHTML=
+    '今日<b style="color:#fff">'+d.weather[0]+'</b>，'+d.tmin+'~'+d.tmax+'℃，'+d.wind_dir+d.wind_level+'级。'+r[2]+'。';
+  document.getElementById('rWins').innerHTML=d.best_windows.slice(0,3).map(function(w){
+    var over=+w.end.slice(0,2)<=DATA.now_hour;
+    return '<span class="wc">'+(over?'⏪ ':'⏰ ')+w.label+' · '+w.score+'分</span>';
+  }).join('');
+  document.getElementById('rMeta').innerHTML=
+    '<span>均温 <b>'+d.tmean+'℃</b></span><span>气压 <b>'+(d.press_delta>0?'+':'')+d.press_delta+' hPa</b></span>'+
+    '<span>湿度 <b>'+d.hum_mean+'%</b></span><span>云量 <b>'+d.cloud_mean+'%</b></span>'+
+    '<span>日出 <b>'+d.sunrise+'</b> · 日落 <b>'+d.sunset+'</b></span>';
+  var C=339.29, off=C*(1-d.score/100);
+  requestAnimationFrame(function(){ setTimeout(function(){
+    document.getElementById('gaugeArc').style.strokeDashoffset=off;
+  },120); });
+}
+function renderRefs(){
+  document.getElementById('refList').innerHTML=DATA.references.map(function(r,i){
+    return '<div class="ref-item"><div class="no">'+r.icon+'</div><div style="flex:1;min-width:0">'+
+      '<div class="rt">'+(i+1)+'. '+r.title+'</div><div class="rx">'+r.text+'</div></div></div>';
+  }).join('');
+}
+function renderOverview(){
+  var best=Math.max.apply(null,DATA.days.map(function(d){return d.score;}));
+  var ov=document.getElementById('overview');
+  ov.innerHTML=DATA.days.map(function(d,i){
+    var c=scoreColor(d.score);
+    return '<div class="ov-row '+(i===cur?'sel':'')+'" data-i="'+i+'">'+
+      '<div class="lb">'+d.label+'<span class="wd">'+d.date.slice(5).replace('-','/')+'</span></div>'+
+      '<div class="bar-bg"><div class="bar-fg" style="width:'+d.score+'%;background:linear-gradient(90deg,'+c+'aa,'+c+')"></div></div>'+
+      '<div class="sc" style="color:'+c+'">'+d.score+'</div>'+
+      '<div class="crown">'+(d.score===best?'👑':'')+'</div></div>';
+  }).join('');
+  Array.prototype.forEach.call(ov.querySelectorAll('.ov-row'),function(row){
+    row.addEventListener('click',function(){selectDay(+row.dataset.i);});
+  });
+}
+function renderChips(){
+  var box=document.getElementById('chips');
+  box.innerHTML=DATA.days.map(function(d,i){
+    var c=scoreColor(d.score);
+    return '<div class="chip '+(i===cur?'on':'')+'" data-i="'+i+'">'+d.label+
+      '<span class="cs" style="color:'+(i===cur?'#9fe8dd':'')+'">'+d.score+'分 · '+d.rating[1]+'</span></div>';
+  }).join('');
+  Array.prototype.forEach.call(box.querySelectorAll('.chip'),function(ch){
+    ch.addEventListener('click',function(){selectDay(+ch.dataset.i);});
+  });
+}
+function renderDay(){
+  var d=DATA.days[cur];
+  pickedHour=null;
+  var html='';
+  html+='<div class="day-head"><div class="wicon">'+d.weather[1]+'</div>'+
+    '<div class="dt"><div class="d1">'+((d.label==='昨天'||d.label==='今天')?d.label+' · ':'')+d.date.slice(5).replace('-','月')+'日 '+d.weekday+'</div>'+
+    '<div class="d2">'+d.weather[0]+' · '+d.tmin+'~'+d.tmax+'℃ · '+d.wind_dir+d.wind_level+'级 · 降水'+d.rain_sum+'mm · 日出'+d.sunrise+'</div></div>'+
+    '<div class="dscore"><b style="color:'+scoreColor(d.score)+'">'+d.score+'</b><span>'+d.rating[1]+'</span></div></div>';
+  html+='<div style="font-size:11px;color:#8fb6d2;margin-bottom:12px">⏰ 当日最佳窗口：'+
+    d.best_windows.map(function(w){return '<b style="color:'+scoreColor(w.score)+'">'+w.label+'（'+w.score+'分）</b>';}).join(' / ')+'</div>';
+  html+='<div class="factors">'+d.factors.map(function(f){
+    return '<div class="factor"><div class="fh">'+f.icon+' '+f.name+
+      '<span class="fs" style="color:'+scoreColor(f.score)+'">'+f.score+'</span></div>'+
+      '<div class="fv">'+f.value+'</div>'+
+      '<div class="fb"><i style="width:'+f.score+'%;background:'+scoreColor(f.score)+'"></i></div>'+
+      '<div class="fa">'+f.advice+'</div></div>';
+  }).join('')+'</div>';
+  html+='<div style="font-size:13px;font-weight:700;margin:16px 0 10px">📈 小时级鱼口曲线 <span style="font-size:10px;color:#6f96b5;font-weight:400">（点击柱子查看当口详情）</span></div>';
+  html+='<div class="chart-box"><div id="chartWrap"></div><div id="hourDetail" style="display:none" class="hour-detail"></div>'+
+    '<div class="chart-tip">虚线为日出 / 日落 · 高亮带为最佳窗口'+(d.is_today?' · 白线为当前时间':'')+'</div></div>';
+  html+='<div style="font-size:13px;font-weight:700;margin:16px 0 10px">💨 小时级风力 <span style="font-size:10px;color:#6f96b5;font-weight:400">（10 米高度风力 · 点下为风向）</span></div>';
+  html+='<div class="chart-box"><div id="windSum" style="font-size:10px;color:#8fb6d2;text-align:center;margin-bottom:2px"></div><div id="windWrap"></div>'+
+    '<div class="chart-tip">纵轴为风力等级（蒲福风级）· 已按本地实况校准 · 5 级以上迎风抛竿困难</div></div>';
+  html+='<div style="font-size:13px;font-weight:700;margin:16px 0 10px">🌡️ 气温 / 水温 <span style="font-size:10px;color:#6f96b5;font-weight:400">（水温按水体热惯性估算）</span></div>';
+  html+='<div class="chart-box"><div id="tempSum" style="font-size:10px;color:#8fb6d2;text-align:center;margin-bottom:2px"></div><div id="tempWrap"></div>'+
+    '<div class="chart-tip">水温 = 0.55×当时气温 + 0.45×日均温 + 季节偏移，仅供参考</div></div>';
+  html+='<div style="font-size:13px;font-weight:700;margin:16px 0 4px">🐟 鱼种参照 <span style="font-size:10px;color:#6f96b5;font-weight:400">（按当日水温推算）</span></div>';
+  html+=d.species.map(function(s){
+    var st='';
+    for(var i=0;i<5;i++) st+=i<s.stars?'★':'☆';
+    return '<div class="sp-row"><div class="sn">'+s.name+'</div>'+
+      '<div class="stars" style="color:'+scoreColor(s.score)+'">'+st+'</div>'+
+      '<div class="ss" style="color:'+scoreColor(s.score)+'">'+s.score+'</div>'+
+      '<div class="sx">'+s.note+'</div></div>';
+  }).join('');
+  html+='<div style="font-size:13px;font-weight:700;margin:16px 0 10px">🎯 台钓·鲫鱼精准分析 <span style="font-size:10px;color:#6f96b5;font-weight:400">（主目标鱼 · 按当日估算水温+气象推算）</span></div>';
+  html+='<div id="juyuBox"></div>';
+  html+='<div style="font-size:13px;font-weight:700;margin:16px 0 10px">🐟 辅助鱼种小时级 <span style="font-size:10px;color:#6f96b5;font-weight:400">（鲤鱼 / 鲶鱼 · 非主目标，顺带可钓）</span></div>';
+  html+='<div id="auxBox"></div>';
+  html+='<div style="font-size:13px;font-weight:700;margin:16px 0 10px">🌙 夜钓视图 <span style="font-size:10px;color:#6f96b5;font-weight:400">（当晚 19:00 → 次日 05:00 · 以鲶鱼为主）</span></div>';
+  html+='<div id="nightBox"></div>';
+  html+='<div style="font-size:13px;font-weight:700;margin:16px 0 10px">🎣 钓深与竿长 <span style="font-size:10px;color:#6f96b5;font-weight:400">（按小时 · 可切鱼种与水深）</span></div>';
+  html+='<div id="depthBox"></div>';
+  document.getElementById('dayDetail').innerHTML=html;
+  renderChart(d);
+  renderWindChart(d);
+  renderTempChart(d);
+  renderJuyu(d);
+  renderAux(d);
+  renderNight(d);
+  renderDepth(d);
+}
+/* 台钓鲫鱼：适钓度 + 分时段策略 + 装备饵料卡 + 因子提示 */
+function renderJuyu(d){
+  var j=d.juyu;
+  if(!j){document.getElementById('juyuBox').innerHTML='';return;}
+  var c=scoreColor(j.score);
+  var starHtml='';
+  for(var i=0;i<5;i++) starHtml+=i<j.stars?'★':'☆';
+  var s='';
+  s+='<div class="jy-hero"><div class="jsc"><b style="color:'+c+'">'+j.score+'</b><span>鲫鱼适钓度</span></div>'+
+    '<div class="jv"><div class="lv" style="color:'+c+'">'+j.verdict+'</div>'+
+    '<div class="st" style="color:'+c+'">'+starHtml+'</div></div></div>';
+  s+='<div style="font-size:12px;font-weight:700;color:#ffd97a;margin:4px 0 2px">⏰ 分时段策略</div>';
+  s+=j.segments.map(function(g){
+    return '<div class="jy-seg"><div class="rg"><b>'+g.name+'</b><span>'+g.range+'</span></div>'+
+      '<div class="tp">'+g.tip+'</div></div>';
+  }).join('');
+  s+='<div style="font-size:12px;font-weight:700;color:#ffd97a;margin:12px 0 6px">🎣 今日装备/饵料卡（按估算水温 '+d.wtemp_mean+'℃）</div>';
+  s+='<div class="jy-gear">'+
+    '<div class="gi"><i>线组</i><b>'+j.gear.line+'</b></div>'+
+    '<div class="gi"><i>鱼钩</i><b>'+j.gear.hook+'</b></div>'+
+    '<div class="gi"><i>饵料/窝料</i><b>'+j.gear.bait+'</b></div>'+
+    '<div class="gi"><i>钓位钓深</i><b>'+j.gear.depth+'</b></div>'+
+    '<div class="gi"><i>味型</i><b>'+j.gear.tone+'</b></div>'+
+    '<div class="gi"><i>调钓</i><b>'+j.gear.adjust+'</b></div></div>';
+  if(j.notes.length){
+    s+='<div style="font-size:12px;font-weight:700;color:#ffd97a;margin:12px 0 4px">📌 今日因子提示</div>';
+    s+=j.notes.map(function(n){return '<div class="jy-note">'+n+'</div>';}).join('');
+  }
+  document.getElementById('juyuBox').innerHTML=s;
+}
+/* 辅助鱼种（鲤鱼/鲶鱼）：评分头 + 24h 迷你曲线 + 最佳窗口 + 策略 */
+function auxSparkline(p,color){
+  var W=318,H=58,L=3,R=315,TOP=8,BOT=42;
+  var plotW=R-L,plotH=BOT-TOP,bw=plotW/24;
+  var lo=100,hi=0,i;
+  for(i=0;i<24;i++){ if(p.hours[i]<lo)lo=p.hours[i]; if(p.hours[i]>hi)hi=p.hours[i]; }
+  lo=Math.max(0,lo-6); hi=Math.min(100,hi+6);
+  if(hi-lo<10) hi=lo+10;
+  function y(v){ return BOT-(v-lo)/(hi-lo)*plotH; }
+  var s='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">';
+  /* 最佳窗口高亮带 */
+  p.best_windows.forEach(function(w){
+    var s0=+w.start.slice(0,2), e0=+w.end.slice(0,2);
+    var x1=L+s0*bw, x2=L+((e0<=s0?e0+24:e0))*bw;
+    s+='<rect x="'+x1.toFixed(1)+'" y="'+TOP+'" width="'+(x2-x1).toFixed(1)+'" height="'+plotH+'" fill="rgba(245,196,81,.13)" rx="3"/>';
+  });
+  var pts=[];
+  for(i=0;i<24;i++){ pts.push((L+i*bw+bw/2).toFixed(1)+','+y(p.hours[i]).toFixed(1)); }
+  s+='<polygon points="'+L+','+BOT+' '+pts.join(' ')+' '+R+','+BOT+'" fill="'+color+'" opacity=".10"/>';
+  s+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="'+color+'" stroke-width="1.6" stroke-linejoin="round"/>';
+  /* 最高分点 */
+  var mi=0; for(i=1;i<24;i++){ if(p.hours[i]>p.hours[mi]) mi=i; }
+  s+='<circle cx="'+(L+mi*bw+bw/2).toFixed(1)+'" cy="'+y(p.hours[mi]).toFixed(1)+'" r="2.6" fill="'+color+'"/>';
+  /* 时间刻度：0/6/12/18 时（首末贴边，用 start/end 对齐避免超出画布被裁） */
+  [0,6,12,18].forEach(function(hh){
+    var tx=L+hh*bw+bw/2;
+    var anc=(hh===0)?'start':(hh===18?'end':'middle');
+    var ax=(hh===0)?L:(hh===18?R:tx);
+    s+='<text x="'+ax.toFixed(1)+'" y="'+(H-4)+'" fill="#5f829e" font-size="8" text-anchor="'+anc+'">'+pad(hh)+'时</text>';
+  });
+  return s+'</svg>';
+}
+function renderAux(d){
+  var box=document.getElementById('auxBox');
+  if(!box) return;
+  var s='';
+  [['carp','🐟 鲤鱼','#a8e063'],['catfish','🐱 鲶鱼','#c084fc']].forEach(function(sp){
+    var p=d[sp[0]];
+    if(!p) return;
+    var c=scoreColor(p.score);
+    var st='';
+    for(var i=0;i<5;i++) st+=i<p.stars?'★':'☆';
+    s+='<div class="aux-card">'+
+      '<div class="aux-hd"><b>'+sp[1]+'</b>'+
+      '<span style="color:'+c+'">'+p.score+'分 · '+p.verdict+'</span>'+
+      '<span class="aux-st" style="color:'+c+'">'+st+'</span></div>'+
+      auxSparkline(p,sp[2])+
+      '<div class="aux-win">⏰ 最佳 '+p.best_windows.map(function(w){return '<b>'+w.label+'</b>';}).join(' · ')+'</div>'+
+      '<div class="aux-tp">🎣 '+p.strategy+'</div>'+
+    '</div>';
+  });
+  box.innerHTML=s;
+}
+/* ================= 夜钓视图 =================
+   时段：当晚 19:00 → 次日 05:00（跨午夜，次日凌晨取 DATA.days[cur+1]）
+   评分：0.55×鲶鱼小时分 + 0.25×鲤鱼小时分 + 0.20×通用鱼情分
+         —— 夜间鲶鱼是第一目标、鲤鱼次之，故如此加权
+   总评：0.4×夜间均分 + 0.6×最佳连续两小时均分（与日评口径一致） */
+function nightSeries(i){
+  var d=DATA.days[i], nx=DATA.days[i+1], slots=[], h;
+  for(h=19;h<=23;h++) slots.push([0,h]);
+  if(nx){ for(h=0;h<=4;h++) slots.push([1,h]); }
+  return slots.map(function(o){
+    var src=o[0]?nx:d, hh=src.hours[o[1]];
+    var cf=(src.catfish&&src.catfish.hours)?src.catfish.hours[o[1]]:hh.score;
+    var cp=(src.carp&&src.carp.hours)?src.carp.hours[o[1]]:hh.score;
+    return {h:o[1], off:o[0], score:hh.score, catfish:cf, carp:cp,
+            ns:Math.round(0.55*cf+0.25*cp+0.20*hh.score),
+            temp:hh.temp, wtemp:hh.wtemp, wind:hh.wind, wlv:hh.wlv,
+            wdir:hh.wdir, rain:hh.rain, press_d:hh.press_d, cloud:hh.cloud};
+  });
+}
+/* 月相：以 2000-01-06 18:14 UTC 新月为基准，朔望月 29.530588 天 */
+function moonInfo(ds){
+  var syn=29.530588;
+  var t=new Date(ds+'T12:00:00+08:00').getTime();
+  var age=(((t-Date.UTC(2000,0,6,18,14))/86400000)%syn+syn)%syn;
+  var illum=(1-Math.cos(2*Math.PI*age/syn))/2;
+  /* 图标必须与亮度一致：🌒/🌘 各约 25%，🌓/🌗 各约 50%，🌔/🌖 各约 75% */
+  var name,icon;
+  if(age<1.0){name='新月';icon='🌑';}
+  else if(age<5.5){name='蛾眉月';icon='🌒';}
+  else if(age<8.0){name='上弦月';icon='🌓';}
+  else if(age<13.5){name='盈凸月';icon='🌔';}
+  else if(age<16.0){name='满月';icon='🌕';}
+  else if(age<21.5){name='亏凸月';icon='🌖';}
+  else if(age<24.0){name='下弦月';icon='🌗';}
+  else {name='残月';icon='🌘';}
+  return {age:age, illum:illum, name:name, icon:icon};
+}
+function renderNight(d){
+  var box=document.getElementById('nightBox');
+  if(!box) return;
+  var nx=DATA.days[cur+1], nh=nightSeries(cur), k;
+  if(!nh.length){box.innerHTML='';return;}
+  var sum=0, bi=0, bv=-1;
+  for(k=0;k<nh.length;k++) sum+=nh[k].ns;
+  var mean=Math.round(sum/nh.length);
+  for(k=0;k<nh.length-1;k++){
+    var v=(nh[k].ns+nh[k+1].ns)/2;
+    if(v>bv){bv=v;bi=k;}
+  }
+  var best2=Math.round(bv);
+  var total=Math.round(0.4*mean+0.6*best2);
+  var r=ratingOf(total), c=scoreColor(total);
+  var stars= total>=85?5 : total>=74?4 : total>=60?3 : total>=45?2 : 1;
+  var st=''; for(k=0;k<5;k++) st+= k<stars?'★':'☆';
+  var mi=moonInfo(d.date);
+  var moonTip = mi.illum<0.2 ? '月黑之夜，鱼敢靠边觅食，是夜钓的好时候'
+              : mi.illum<0.5 ? '月光较弱，对夜钓基本无影响'
+              : mi.illum<0.8 ? '月光偏亮，鱼略警觉，建议钓深一点、少开灯'
+              : '接近满月，光线强、鱼趋光上浮但警觉高，宜钓远钓深';
+
+  /* ---- 元信息 ---- */
+  var wts=nh.map(function(x){return x.wtemp;});
+  var wmax=Math.max.apply(null,nh.map(function(x){return x.wlv;}));
+  var rsum=nh.reduce(function(a,b){return a+b.rain;},0);
+  var meta='';
+  meta+='<div class="mi"><i>日落</i>'+(d.sunset||'--')+'</div>';
+  meta+='<div class="mi"><i>日出</i>'+((nx&&nx.sunrise)||d.sunrise||'--')+'</div>';
+  meta+='<div class="mi"><i>水温</i>'+Math.min.apply(null,wts).toFixed(1)+'~'+Math.max.apply(null,wts).toFixed(1)+'℃</div>';
+  meta+='<div class="mi"><i>最大风</i>'+wmax+'级</div>';
+  meta+='<div class="mi"><i>降水</i>'+(rsum>0?rsum.toFixed(1)+'mm':'无')+'</div>';
+
+  /* ---- 夜间柱状图（10 格：当晚 19-23 + 次日 0-4） ---- */
+  var W=348,H=124,L=6,R=344,TOP=16,BOT=98,bw=(R-L)/nh.length;
+  function ny(v){return BOT-v/100*(BOT-TOP);}
+  var s='';
+  s+='<line x1="'+L+'" y1="'+ny(75).toFixed(1)+'" x2="'+R+'" y2="'+ny(75).toFixed(1)+'" stroke="rgba(52,211,153,.28)" stroke-width="1" stroke-dasharray="3 3"/>';
+  s+='<text x="'+(R-1)+'" y="'+(ny(75)-3).toFixed(1)+'" fill="#34d399" font-size="8" text-anchor="end">75 宜钓线</text>';
+  /* 跨午夜分隔 */
+  var cutX=L+5*bw;
+  if(nh.length>5) s+='<line x1="'+cutX.toFixed(1)+'" y1="'+(TOP-6)+'" x2="'+cutX.toFixed(1)+'" y2="'+BOT+'" stroke="rgba(129,140,248,.5)" stroke-width="1" stroke-dasharray="2 2"/>';
+  nh.forEach(function(x,k){
+    var x0=L+k*bw+2, w=bw-4, y=ny(x.ns), hgt=BOT-y, col=scoreColor(x.ns);
+    s+='<rect x="'+x0.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+w.toFixed(1)+'" height="'+hgt.toFixed(1)+'" rx="3" fill="'+col+'" opacity="'+(x.off?'.55':'.92')+'"/>';
+    s+='<text x="'+(x0+w/2).toFixed(1)+'" y="'+(y-3.5).toFixed(1)+'" fill="'+col+'" font-size="9" font-weight="700" text-anchor="middle">'+x.ns+'</text>';
+    s+='<text x="'+(x0+w/2).toFixed(1)+'" y="'+(BOT+12)+'" fill="#7ea6c4" font-size="9" text-anchor="middle">'+pad(x.h)+'</text>';
+    s+='<text x="'+(x0+w/2).toFixed(1)+'" y="'+(BOT+22)+'" fill="#5f829e" font-size="8" text-anchor="middle">'+x.wlv+'级</text>';
+  });
+  s+='<rect x="'+(L+bi*bw).toFixed(1)+'" y="'+TOP+'" width="'+(bw*2).toFixed(1)+'" height="'+(BOT-TOP)+'" fill="none" stroke="#f5c451" stroke-width="1.2" stroke-dasharray="4 3" rx="4"/>';
+  s+='<line x1="'+L+'" y1="'+BOT+'" x2="'+R+'" y2="'+BOT+'" stroke="rgba(255,255,255,.18)" stroke-width="1"/>';
+  if(nh.length>5){
+    s+='<text x="'+(L+2.5*bw).toFixed(1)+'" y="'+(TOP-7)+'" fill="#8fb6d2" font-size="8.5" text-anchor="middle">当晚</text>';
+    s+='<text x="'+(L+7.5*bw).toFixed(1)+'" y="'+(TOP-7)+'" fill="#818cf8" font-size="8.5" text-anchor="middle">次日凌晨</text>';
+  }
+
+  /* ---- 建议 ---- */
+  var wm=nh.reduce(function(a,b){return a+b.wtemp;},0)/nh.length;
+  var pd=nh.reduce(function(a,b){return a+b.press_d;},0)/nh.length;
+  var tips=[];
+  if(wm<10) tips.push('夜间水温 '+wm.toFixed(1)+'℃，鱼活性低：钓深 2.5-3.5 米，浓腥红虫/蚯蚓，慢守少抽');
+  else if(wm<18) tips.push('夜间水温 '+wm.toFixed(1)+'℃，鲤鲶尚活跃：深浅交界 1.5-2.5 米，腥香饵+酒米打窝');
+  else if(wm<=26) tips.push('夜间水温 '+wm.toFixed(1)+'℃，夜钓黄金温区：鲶鱼靠边觅食，可钓近岸 1-1.5 米');
+  else tips.push('夜间水温 '+wm.toFixed(1)+'℃偏高，鱼夜间上浮：建议钓浮或钓荫，避开闷热时段');
+  tips.push(moonTip);
+  if(wmax>=5) tips.push('夜间最大风 '+wmax+' 级：走漂明显且夜视差，加重铅改钓钝，风大就收竿');
+  if(rsum>0) tips.push('夜间有降水 '+rsum.toFixed(1)+'mm：弱光浑水下鲶鱼更敢靠边，但岸湿路滑、务必防雷');
+  if(pd<=-1.5) tips.push('夜间气压下行（均 '+pd.toFixed(1)+' hPa/3h）：溶氧改善，鱼口偏活跃');
+  else if(pd>=1.5) tips.push('夜间气压上行（均 '+pd.toFixed(1)+' hPa/3h）：鱼口易闭，建议缩短夜钓时长');
+
+  var lab=fmtH(nh[bi].h)+'-'+fmtH((nh[bi+1].h+1)%24);
+  box.innerHTML='<div class="ng-card">'+
+    '<div class="ng-hd">'+
+      '<div class="ng-sc" style="color:'+c+'">'+total+'</div>'+
+      '<div class="ng-mid"><div class="ng-vd" style="color:'+c+'">'+r[0]+' 级 · '+r[1]+'</div>'+
+      '<div class="ng-st" style="color:'+c+'">'+st+'</div></div>'+
+      '<div class="ng-moon">'+mi.icon+'<span>'+mi.name+' '+Math.round(mi.illum*100)+'%</span></div>'+
+    '</div>'+
+    '<div class="ng-meta">'+meta+'</div>'+
+    '<div class="ng-bar"><svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">'+s+'</svg>'+
+      '<div style="font-size:9.5px;color:#6f96b5;text-align:center;margin-top:3px">柱高＝夜钓综合分 · 半透明为次日凌晨 · 黄框为最佳连续 2 小时</div></div>'+
+    '<div class="ng-win">🌙 最佳夜钓窗口 <b>'+lab+'</b>（'+best2+' 分）· 夜间均分 '+mean+'</div>'+
+    '<div class="ng-tip">'+tips.map(function(t){return '<div>'+t+'</div>';}).join('')+'</div>'+
+    '<div class="ng-safe">⚠️ 夜钓安全：结伴而行、穿救生衣、头灯＋备用电源、远离高压线与陡坡；凌晨 2-4 点体温最低，注意保暖防蚊。</div>'+
+  '</div>';
+}
+/* ===== 按小时推荐钓深与竿长 =====
+   水层因子 f ∈ [0,1]：0 = 钓浮，1 = 钓底。绝对钓深 = f × 用户设定的水深，
+   所以换钓场只改水深即可，不必动模型。竿长按「鱼离岸距离」估算后落到市面标准规格。
+   依赖的小时级字段（wtemp/cloud/press_d/wlv/rain/h）在实时计算与内置快照里都存在，
+   因此这份逻辑只写在前端一处，不需要与后端的 compute.py 同步。 */
+var ROD_SPECS = [2.7, 3.6, 4.5, 5.4, 6.3, 7.2];
+var DEPTH_SPEC = {
+  juyu:    {name:'鲫鱼', icon:'🐟', peak:20, cold:8,  hot:28, rodBase:1.0, nightF:+0.20, nightRod:+0.2},
+  carp:    {name:'鲤鱼', icon:'🐠', peak:25, cold:10, hot:30, rodBase:1.6, nightF:+0.20, nightRod:+0.2},
+  catfish: {name:'鲶鱼', icon:'🐡', peak:26, cold:12, hot:32, rodBase:0.4, nightF:-0.30, nightRod:-0.4}
+};
+function depthFactor(sp, h, wtemp, cloud, pd, wlv, rain){
+  var S=DEPTH_SPEC[sp], f;
+  if(wtemp < S.cold)          f = 1.00;                        // 严寒：深水越冬
+  else if(wtemp > S.hot)      f = 0.92;                        // 酷暑：退深避暑
+  else f = 0.52 + 0.30*(Math.abs(wtemp-S.peak)/10);            // 偏离适宜温度越远越深
+  if((h>=5&&h<=7)||(h>=17&&h<=19)) f -= 0.22;                  // 早晚靠边觅食，钓浅
+  else if(h>=11&&h<=14)            f += 0.22;                  // 午间强光，退深
+  else if(h>=20||h<=4)             f += S.nightF;              // 夜间（鲶鱼反而靠边）
+  if(cloud>70)      f -= 0.08;                                 // 阴天光线弱，鱼敢靠边
+  else if(cloud<30) f += 0.08;                                 // 强光晴天，退深
+  if(pd <= -2) f -= 0.12;                                      // 气压下行，上浮
+  if(wlv >= 5) f += 0.14;                                      // 大风避浪，钓深
+  if(rain > 0) f -= 0.06;                                      // 降水溶氧好，活跃靠边
+  return Math.max(0.15, Math.min(1.0, f));
+}
+function depthLabel(f, W){
+  var depth = f*W;
+  if(f >= 0.88) return {txt:'钓底', depth:depth};
+  if(f <= 0.40) return {txt:'钓浮', depth:depth};
+  var off = Math.round((W-depth)*20)*5;                        // 离底 cm，取整到 5
+  if(off < 5) return {txt:'钓底', depth:depth};
+  return {txt:'离底'+off+'cm', depth:depth};
+}
+var waterDepth = 2.0, curSpecies = 'juyu';
+(function(){
+  try{ var w=localStorage.getItem('fishWaterDepth'); if(w) waterDepth=parseFloat(w)||2.0; }catch(e){}
+  try{ var s=localStorage.getItem('fishSpecies'); if(s&&DEPTH_SPEC[s]) curSpecies=s; }catch(e){}
+})();
+function setWaterDepth(w){
+  waterDepth=w; try{ localStorage.setItem('fishWaterDepth', String(w)); }catch(e){}
+  renderDay();
+}
+function setSpecies(s){
+  curSpecies=s; try{ localStorage.setItem('fishSpecies', s); }catch(e){}
+  renderDay();
+}
+/* 一次性算出 24 小时的水层/钓深/竿长。竿长做滞后平滑：相邻小时若只是勉强跨档
+   （raw 落在两档中点附近）就沿用前一档，避免「每小时都要换竿」这种不现实的抖动。 */
+function depthSeries(hrs){
+  var S=DEPTH_SPEC[curSpecies], out=[], prevRod=null;
+  for(var i=0;i<hrs.length;i++){
+    var x=hrs[i];
+    var f=depthFactor(curSpecies, x.h, x.wtemp, x.cloud, x.press_d, x.wlv, x.rain);
+    var L=depthLabel(f, waterDepth);
+    var adj=0;
+    if((x.h>=5&&x.h<=7)||(x.h>=17&&x.h<=19)) adj=-0.5;
+    else if(x.h>=11&&x.h<=14)                 adj=+0.4;
+    else if(x.h>=20||x.h<=4)                  adj=S.nightRod;
+    var raw=L.depth*1.8 + S.rodBase + adj;
+    var best=ROD_SPECS[0], bd=99;
+    for(var k=0;k<ROD_SPECS.length;k++){
+      var dd=Math.abs(ROD_SPECS[k]-raw); if(dd<bd){bd=dd;best=ROD_SPECS[k];}
+    }
+    if(prevRod!==null && best!==prevRod && Math.abs(best-prevRod)<1.2){
+      var mid=(best+prevRod)/2;
+      if(Math.abs(raw-mid)<0.32) best=prevRod;      // 只是勉强跨档 → 不换竿
+    }
+    out.push({h:x.h, f:f, txt:L.txt, depth:L.depth, rod:best});
+    prevRod=best;
+  }
+  return out;
+}
+function renderDepth(d){
+  var box=document.getElementById('depthBox');
+  if(!box) return;
+  var hrs=d.hours;
+  if(!hrs||!hrs.length){ box.innerHTML=''; return; }
+  var S=DEPTH_SPEC[curSpecies];
+
+  /* 水深选择 + 鱼种切换 */
+  var sel='';
+  [1.0,1.5,2.0,2.5,3.0].forEach(function(w){
+    sel+='<span class="dp-opt'+(Math.abs(w-waterDepth)<0.01?' on':'')+'" onclick="setWaterDepth('+w+')">'+w.toFixed(1)+'m</span>';
+  });
+  var tabs='';
+  ['juyu','carp','catfish'].forEach(function(k){
+    tabs+='<span class="dp-tab'+(curSpecies===k?' on':'')+'" onclick="setSpecies(\''+k+'\')">'+
+          DEPTH_SPEC[k].icon+' '+DEPTH_SPEC[k].name+'</span>';
+  });
+
+  /* 按小时表 */
+  var now=new Date(), nowH=(now.getUTCHours()+8)%24;
+  var ser=depthSeries(hrs);
+  var rows='';
+  ser.forEach(function(o){
+    var isNow = (d.is_today && o.h===nowH);
+    rows+='<div class="dp-row'+(isNow?' now':'')+'">'+
+      '<span class="dp-t">'+pad(o.h)+':00</span>'+
+      '<span class="dp-d">'+o.txt+'<i>'+o.depth.toFixed(1)+'m</i></span>'+
+      '<span class="dp-r">'+o.rod.toFixed(1)+'m</span></div>';
+  });
+
+  /* 分时段摘要：从同一份序列里取，保证与表格一致 */
+  function at(hh){
+    for(var i=0;i<ser.length;i++) if(ser[i].h===hh) return ser[i];
+    return null;
+  }
+  function brief(hh, label){
+    var o=at(hh); if(!o) return '';
+    return '<div class="dp-b"><i>'+label+'</i>'+pad(o.h)+':00 · '+o.txt+'（'+o.depth.toFixed(1)+'m）· '+
+           o.rod.toFixed(1)+'m 竿</div>';
+  }
+  var sum=brief(6,'早')+brief(12,'午')+brief(18,'晚')+brief(21,'夜');
+
+  /* 理由：挑最主要的两个驱动因素 */
+  var mid=hrs[12]||hrs[Math.floor(hrs.length/2)];
+  var tips=[];
+  var wt=mid.wtemp;
+  if(wt < S.cold)      tips.push('水温 '+wt.toFixed(1)+'℃ 偏凉，鱼聚深水越冬，宜钓最深');
+  else if(wt > S.hot)  tips.push('水温 '+wt.toFixed(1)+'℃ 偏高，鱼退深避暑，午间尤其要钓深');
+  else tips.push('水温 '+wt.toFixed(1)+'℃ 接近'+S.name+'适宜区间（'+S.peak+'℃ 附近），鱼活性高、敢靠边');
+  var anyWind=false, anyRain=false, lowP=false;
+  hrs.forEach(function(x){ if(x.wlv>=5) anyWind=true; if(x.rain>0) anyRain=true; if(x.press_d<=-2) lowP=true; });
+  if(lowP)    tips.push('有时段气压下行 ≥2hPa，鱼会上浮，钓离底比钓底好');
+  if(anyWind) tips.push('出现 5 级以上风，走漂加剧，需钓深避浪并加大铅坠');
+  if(anyRain) tips.push('有降水，溶氧改善、鱼靠边，可适度钓浅');
+  if(tips.length<2) tips.push('早晚 5-7 点、17-19 点是靠边觅食窗口，钓浅；午间退深');
+
+  box.innerHTML=
+    '<div class="dp-card">'+
+      '<div class="dp-hd">🎣 <b>钓深与竿长</b><span class="dp-hint">按小时 · '+S.name+'</span></div>'+
+      '<div class="dp-lab">钓场水深</div><div class="dp-opts">'+sel+'</div>'+
+      '<div class="dp-opts dp-tabs">'+tabs+'</div>'+
+      '<div class="dp-tbhead"><span>时间</span><span>钓深</span><span>竿长</span></div>'+
+      '<div class="dp-tb">'+rows+'</div>'+
+      '<div class="dp-sum">'+sum+'</div>'+
+      '<div class="dp-tip">'+tips.slice(0,2).map(function(t){return '<div>· '+t+'</div>';}).join('')+'</div>'+
+      '<div class="dp-note">水层按水温、时段、光照、气压、风力、降水综合估算；竿长为市面标准规格（2.7/3.6/4.5/5.4/6.3/7.2m）。'+
+      '实际请结合水底地形、水色与鱼星调整。</div>'+
+    '</div>';
+}
+/* 小时级风力曲线：折线+面积，纵轴为风力等级(蒲福风级)，每3小时风向、最大风标注 */
+function renderWindChart(d){
+  var W=348,H=180,L=24,R=344,TOP=26,BOT=122;
+  var plotW=R-L,plotH=BOT-TOP,bw=plotW/24;
+  /* 蒲福风级阈值（m/s），与后端 wind_level 一致 */
+  var LV_T=[0.3,1.6,3.4,5.5,8,10.8,13.9,17.2,20.8,24.5,28.5,32.7];
+  function windLevel(ms){var lv=0;for(var i=0;i<LV_T.length;i++){if(ms>=LV_T[i])lv=i+1;}return lv;}
+  var maxW=0,sumW=0,maxIdx=0;
+  d.hours.forEach(function(h,i){sumW+=h.wind;if(h.wind>maxW){maxW=h.wind;maxIdx=i;}});
+  var avgW=sumW/24;
+  var maxLv=windLevel(maxW);
+  /* y 轴上界取最高等级的风速阈值并留 8% 余量；位置仍按 m/s 连续映射，曲线平滑 */
+  var yMax=Math.max(3.4,(LV_T[maxLv-1]||LV_T[LV_T.length-1])*1.08);
+  function wy(v){return BOT-Math.min(v,yMax)/yMax*plotH;}
+  var s='<defs><linearGradient id="wg" x1="0" y1="0" x2="0" y2="1">'+
+    '<stop offset="0%" stop-color="#38bdf8" stop-opacity=".38"/><stop offset="100%" stop-color="#38bdf8" stop-opacity=".02"/>'+
+    '</linearGradient></defs>';
+  /* 网格 + y 轴等级刻度（每级阈值处画线并标注） */
+  for(var lv=1;lv<=maxLv;lv++){
+    var y=BOT-LV_T[lv-1]/yMax*plotH;
+    s+='<line x1="'+L+'" y1="'+y.toFixed(1)+'" x2="'+R+'" y2="'+y.toFixed(1)+'" stroke="rgba(255,255,255,.06)" stroke-width="1"/>';
+    /* 太靠近底部 "0" 标签的等级不再标注，避免文字叠字 */
+    if(BOT-y>=11)
+      s+='<text x="'+(L-4)+'" y="'+(y+3).toFixed(1)+'" fill="#5f829e" font-size="10" text-anchor="end">'+lv+'级</text>';
+  }
+  s+='<text x="'+(L-4)+'" y="'+(BOT+3).toFixed(1)+'" fill="#5f829e" font-size="10" text-anchor="end">0</text>';
+  /* 面积 + 折线 */
+  var pts=d.hours.map(function(h,i){return (L+i*bw+bw/2).toFixed(1)+','+wy(h.wind).toFixed(1);});
+  s+='<polygon points="'+L+','+BOT+' '+pts.join(' ')+' '+R+','+BOT+'" fill="url(#wg)"/>';
+  s+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+  /* 数据点（今天已过的小时半透明） */
+  d.hours.forEach(function(h,i){
+    var x=L+i*bw+bw/2,y=wy(h.wind);
+    var dim=(d.is_today&&h.h<DATA.now_hour)?.3:.9;
+    s+='<circle cx="'+x.toFixed(1)+'" cy="'+y.toFixed(1)+'" r="2.2" fill="#38bdf8" opacity="'+dim+'"/>';
+  });
+  /* 最大风标注 */
+  var mx=L+maxIdx*bw+bw/2,my=wy(maxW);
+  s+='<circle cx="'+mx.toFixed(1)+'" cy="'+my.toFixed(1)+'" r="4" fill="none" stroke="#f5c451" stroke-width="1.5"/>';
+  s+='<text x="'+mx.toFixed(1)+'" y="'+(my-8).toFixed(1)+'" fill="#f5c451" font-size="10" font-weight="700" text-anchor="middle">最大'+d.hours[maxIdx].wlv+'级</text>';
+  /* 今天：当前时间白线 */
+  if(d.is_today){
+    var nx=L+(DATA.now_hour+9/60)*bw;
+    s+='<line x1="'+nx.toFixed(1)+'" y1="'+TOP+'" x2="'+nx.toFixed(1)+'" y2="'+(BOT+4)+'" stroke="#fff" stroke-width="1.2" opacity=".7"/>';
+    s+='<text x="'+nx.toFixed(1)+'" y="'+(BOT+43)+'" fill="#fff" font-size="10" opacity=".8" text-anchor="middle">现在</text>';
+  }
+  /* 每 3 小时风向（数据点下方一行） */
+  for(var hh=0;hh<=21;hh+=3){
+    var x=L+hh*bw+bw/2;
+    if(d.is_today && Math.abs(x-nx)<17) continue;
+    s+='<text x="'+x.toFixed(1)+'" y="'+(BOT+14)+'" fill="#7ea6c4" font-size="9" text-anchor="middle">'+d.hours[hh].wdir+'</text>';
+  }
+  /* x 轴时间（与"现在"标线水平过近的刻度跳过，避免挤字） */
+  for(var hh=0;hh<=21;hh+=3){
+    var tx=L+hh*bw+bw/2;
+    if(d.is_today && Math.abs(tx-nx)<17) continue;
+    s+='<text x="'+tx.toFixed(1)+'" y="'+(BOT+29)+'" fill="#7ea6c4" font-size="10" text-anchor="middle">'+pad(hh)+'时</text>';
+  }
+  s+='<line x1="'+L+'" y1="'+BOT+'" x2="'+R+'" y2="'+BOT+'" stroke="rgba(255,255,255,.18)" stroke-width="1"/>';
+  document.getElementById('windWrap').innerHTML='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">'+s+'</svg>';
+  document.getElementById('windSum').innerHTML='全日最大 <b style="color:#f5c451">'+d.hours[maxIdx].wlv+' 级</b>（'+pad(maxIdx)+'时 · '+d.hours[maxIdx].wdir+'）· 平均 '+windLevel(avgW)+' 级 · 实况校准×'+(DATA.wind_ratio||0.55).toFixed(2);
+}
+/* 气温 / 水温双折线：水温为水体热惯性估算值，两线之间填充温差区 */
+function renderTempChart(d){
+  var W=348,H=176,L=26,R=344,TOP=28,BOT=118;
+  var plotW=R-L,plotH=BOT-TOP,bw=plotW/24;
+  var all=[],i;
+  for(i=0;i<24;i++){all.push(d.hours[i].temp,d.hours[i].wtemp);}
+  var lo=Math.min.apply(null,all),hi=Math.max.apply(null,all);
+  var yLo=Math.floor(lo/2)*2-1,yHi=Math.ceil(hi/2)*2+1;
+  function ty(v){return BOT-(v-yLo)/(yHi-yLo)*plotH;}
+  var s='';
+  /* 图例 */
+  s+='<g font-size="8.5">'+
+    '<rect x="'+(L+2)+'" y="'+(TOP-17)+'" width="8" height="3" rx="1.5" fill="#f97316"/>'+
+    '<text x="'+(L+13)+'" y="'+(TOP-13)+'" fill="#f9934a">气温</text>'+
+    '<rect x="'+(L+46)+'" y="'+(TOP-17)+'" width="8" height="3" rx="1.5" fill="#38bdf8"/>'+
+    '<text x="'+(L+57)+'" y="'+(TOP-13)+'" fill="#5ecbf5">水温（估算）</text></g>';
+  /* 网格 + y 轴刻度 */
+  for(var v=yLo;v<=yHi;v+=2){
+    var y=BOT-(v-yLo)/(yHi-yLo)*plotH;
+    s+='<line x1="'+L+'" y1="'+y.toFixed(1)+'" x2="'+R+'" y2="'+y.toFixed(1)+'" stroke="rgba(255,255,255,.06)" stroke-width="1"/>';
+    s+='<text x="'+(L-4)+'" y="'+(y+3).toFixed(1)+'" fill="#5f829e" font-size="10" text-anchor="end">'+v+'℃</text>';
+  }
+  /* 两线之间的温差填充区 */
+  var airPts=[],waterPts=[];
+  for(i=0;i<24;i++){
+    var x=L+i*bw+bw/2;
+    airPts.push(x.toFixed(1)+','+ty(d.hours[i].temp).toFixed(1));
+    waterPts.push(x.toFixed(1)+','+ty(d.hours[i].wtemp).toFixed(1));
+  }
+  s+='<polygon points="'+airPts.join(' ')+' '+waterPts.slice().reverse().join(' ')+'" fill="rgba(249,115,22,.07)"/>';
+  /* 双折线 + 数据点 */
+  [['temp','#f97316'],['wtemp','#38bdf8']].forEach(function(p){
+    var pts=d.hours.map(function(h,i){return (L+i*bw+bw/2).toFixed(1)+','+ty(h[p[0]]).toFixed(1);});
+    s+='<polyline points="'+pts.join(' ')+'" fill="none" stroke="'+p[1]+'" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>';
+    d.hours.forEach(function(h,i){
+      var x=L+i*bw+bw/2;
+      var dim=(d.is_today&&h.h<DATA.now_hour)?.3:.9;
+      s+='<circle cx="'+x.toFixed(1)+'" cy="'+ty(h[p[0]]).toFixed(1)+'" r="1.8" fill="'+p[1]+'" opacity="'+dim+'"/>';
+    });
+  });
+  /* 今天：当前时间白线 */
+  if(d.is_today){
+    var nx=L+(DATA.now_hour+9/60)*bw;
+    s+='<line x1="'+nx.toFixed(1)+'" y1="'+TOP+'" x2="'+nx.toFixed(1)+'" y2="'+(BOT+4)+'" stroke="#fff" stroke-width="1.2" opacity=".7"/>';
+    s+='<text x="'+nx.toFixed(1)+'" y="'+(BOT+27)+'" fill="#fff" font-size="10" opacity=".8" text-anchor="middle">现在</text>';
+  }
+  /* x 轴时间 */
+  for(var hh=0;hh<=21;hh+=3){
+    var tx=L+hh*bw+bw/2;
+    s+='<text x="'+tx.toFixed(1)+'" y="'+(BOT+15)+'" fill="#7ea6c4" font-size="10" text-anchor="middle">'+pad(hh)+'时</text>';
+  }
+  s+='<line x1="'+L+'" y1="'+BOT+'" x2="'+R+'" y2="'+BOT+'" stroke="rgba(255,255,255,.18)" stroke-width="1"/>';
+  document.getElementById('tempWrap').innerHTML='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">'+s+'</svg>';
+  var gap=Math.round((d.wtemp_mean-d.tmean)*10)/10;
+  document.getElementById('tempSum').innerHTML='日均气温 <b style="color:#f9934a">'+d.tmean+'℃</b> · 估算水温 <b style="color:#5ecbf5">'+d.wtemp_mean+'℃</b> · 温差 <b style="color:#c8dff0">'+(gap>0?'+':'')+gap+'℃</b>';
+}
+function renderChart(d){
+  var W=348,H=168,L=24,R=344,TOP=18,BOT=122;
+  var plotW=R-L,plotH=BOT-TOP,bw=plotW/24;
+  var s='';
+  d.best_windows.forEach(function(w){
+    var x0=L+ +w.start.slice(0,2)*bw, x1=L+ +w.end.slice(0,2)*bw;
+    s+='<rect x="'+x0.toFixed(1)+'" y="'+TOP+'" width="'+(x1-x0).toFixed(1)+'" height="'+plotH+'" fill="rgba(245,196,81,.07)" rx="4"/>';
+  });
+  [['日出',d.sunrise],['日落',d.sunset]].forEach(function(p){
+    var hh=+p[1].slice(0,2), mm=+p[1].slice(3,2+2);
+    var x=L+(hh+mm/60)*bw;
+    s+='<line x1="'+x.toFixed(1)+'" y1="'+(TOP-4)+'" x2="'+x.toFixed(1)+'" y2="'+(BOT+4)+'" stroke="rgba(245,196,81,.4)" stroke-width="1" stroke-dasharray="3,3"/>';
+    s+='<text x="'+x.toFixed(1)+'" y="'+(TOP-5)+'" fill="rgba(245,196,81,.75)" font-size="10" text-anchor="middle">'+p[0]+'</text>';
+  });
+  [25,50,75,100].forEach(function(v){
+    var y=BOT-v/100*plotH;
+    s+='<line x1="'+L+'" y1="'+y+'" x2="'+R+'" y2="'+y+'" stroke="rgba(255,255,255,.06)" stroke-width="1"/>';
+  });
+  d.hours.forEach(function(h,i){
+    var x=L+i*bw+(bw-9)/2;
+    var bh=Math.max(3,h.score/100*plotH);
+    var y=BOT-bh;
+    var c=scoreColor(h.score);
+    var dim=(d.is_today&&h.h<DATA.now_hour)?' dim':'';
+    var inWin=d.best_windows.some(function(w){return i>=+w.start.slice(0,2)&&i<+w.end.slice(0,2);});
+    s+='<g class="bar'+dim+'" data-h="'+h.h+'">'+
+      '<rect class="main" x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="9" height="'+bh.toFixed(1)+'" rx="3" fill="'+c+'" opacity="'+(inWin?0.95:0.72)+'"/>'+
+      (inWin?'<rect x="'+(x-1).toFixed(1)+'" y="'+(y-3).toFixed(1)+'" width="11" height="3" rx="1.5" fill="#f5c451"/>':'')+
+      '</g>';
+  });
+  if(d.is_today){
+    var nx=L+(DATA.now_hour+9/60)*bw;
+    s+='<line x1="'+nx.toFixed(1)+'" y1="'+TOP+'" x2="'+nx.toFixed(1)+'" y2="'+(BOT+4)+'" stroke="#fff" stroke-width="1.2" opacity=".8"/>';
+    s+='<text x="'+nx.toFixed(1)+'" y="'+(BOT+28)+'" fill="#fff" font-size="10" opacity=".85" text-anchor="middle">现在</text>';
+  }
+  s+='<line x1="'+L+'" y1="'+BOT+'" x2="'+R+'" y2="'+BOT+'" stroke="rgba(255,255,255,.18)" stroke-width="1"/>';
+  for(var hh=0;hh<=21;hh+=3){
+    var tx=L+hh*bw+bw/2;
+    if(d.is_today && Math.abs(tx-nx)<17) continue;   /* 避开"现在"标线 */
+    s+='<text x="'+tx.toFixed(1)+'" y="'+(BOT+13)+'" fill="#7ea6c4" font-size="10" text-anchor="middle">'+pad(hh)+'时</text>';
+  }
+  var wrap=document.getElementById('chartWrap');
+  wrap.innerHTML='<svg viewBox="0 0 '+W+' '+H+'" xmlns="http://www.w3.org/2000/svg">'+s+'</svg>';
+  Array.prototype.forEach.call(wrap.querySelectorAll('.bar'),function(g){
+    g.addEventListener('click',function(){
+      pickedHour=+g.dataset.h;
+      Array.prototype.forEach.call(wrap.querySelectorAll('.bar'),function(b){b.classList.remove('picked');});
+      g.classList.add('picked');
+      showHourDetail(d,pickedHour);
+    });
+  });
+  var defH=d.is_today?Math.max(DATA.now_hour,+d.best_windows[0].end.slice(0,2)-1):+d.best_windows[0].end.slice(0,2)-1;
+  var defBar=wrap.querySelector('.bar[data-h="'+defH+'"]');
+  if(defBar){defBar.classList.add('picked');showHourDetail(d,defH);}
+}
+function showHourDetail(d,hh){
+  var h=d.hours[hh];
+  var el=document.getElementById('hourDetail');
+  el.style.display='block';
+  el.innerHTML='<div class="hd-h"><b>'+fmtH(hh)+' - '+fmtH(hh+1)+'</b>'+
+    '<span class="tag" style="background:'+scoreColor(h.score)+'22;color:'+scoreColor(h.score)+';border:1px solid '+scoreColor(h.score)+'55">'+h.score+'分 · '+ratingOf(h.score)[1]+'</span>'+
+    (d.is_today&&hh<DATA.now_hour?'<span style="font-size:10px;color:#6f96b5">已过</span>':'')+'</div>'+
+    '<div class="hd-m"><span>气温 <b>'+h.temp.toFixed(1)+'℃</b></span><span>水温 <b>'+h.wtemp.toFixed(1)+'℃（估）</b></span><span>风力 <b>'+h.wdir+' '+h.wlv+'级（'+h.wind.toFixed(1)+'m/s）</b></span>'+
+    '<span>3h变压 <b>'+(h.press_d>0?'+':'')+h.press_d+' hPa</b></span><span>降水 <b>'+h.rain+' mm</b></span><span>云量 <b>'+h.cloud+'%</b></span></div>'+
+    '<div class="hd-a">💡 '+hourAdvice(h)+'</div>';
+}
+function selectDay(i){
+  if(i===cur) return;
+  cur=i;
+  renderOverview();renderChips();renderDay();
+}
+function renderAll(){
+  var todayIdx=DATA.days.findIndex(function(d){return d.is_today;});
+  cur=todayIdx>=0?todayIdx:1;
+  pickedHour=null;
+  renderHero();renderRefs();renderOverview();renderChips();renderDay();
+}
+
+/* ============================================================
+   日报海报（Canvas 绘制 + 保存）
+   ============================================================ */
+function rr(c,x,y,w,h,r){
+  c.beginPath();
+  c.moveTo(x+r,y); c.arcTo(x+w,y,x+w,y+h,r); c.arcTo(x+w,y+h,x,y+h,r);
+  c.arcTo(x,y+h,x,y,r); c.arcTo(x,y,x+w,y,r); c.closePath();
+}
+/* 保守宽度估算：emoji/全角按1.2倍字号，半角按0.68倍，空格0.32倍
+   （canvas measureText 对 emoji 和全角括号测量不准；bold 无衬线半角实际约0.68倍） */
+function textWidth(text,fs){
+  var w=0;
+  for(var i=0;i<text.length;i++){
+    var ch=text.charCodeAt(i);
+    if(ch>0x2E80) w+=fs*1.2;
+    else if(ch===32) w+=fs*0.32;
+    else w+=fs*0.68;
+  }
+  return w;
+}
+function wrapText(c,text,x,y,maxW,lh,fs){
+  var line='', yy=y;
+  for(var i=0;i<text.length;i++){
+    var t=line+text[i];
+    if(textWidth(t,fs)>maxW && line){
+      /* 优先回退到最近一个空格处换行，避免从词/括号中间硬断 */
+      var sp=line.lastIndexOf(' ');
+      if(sp>0&&textWidth(line.slice(sp+1)+text[i],fs)<=maxW){
+        c.fillText(line.slice(0,sp),x,yy);
+        line=line.slice(sp+1)+text[i];
+      }else{
+        c.fillText(line,x,yy); line=text[i];
+      }
+      yy+=lh;
+    }
+    else line=t;
+  }
+  c.fillText(line,x,yy);
+  return yy+lh;   /* 返回块结束位置（最后一行基线+行高） */
+}
+function clampText(c,text,maxW,fs){
+  if(textWidth(text,fs)<=maxW) return text;
+  var t=text;
+  while(t.length&&textWidth(t+'…',fs)>maxW) t=t.slice(0,-1);
+  return t+'…';
+}
+function drawPoster(){
+  var d=DATA.days[cur];
+  var W=750, scale=Math.min(2,window.devicePixelRatio||1);
+  var H=1480;
+  var cv=document.createElement('canvas'); cv.width=W*scale; cv.height=H*scale;
+  var c=cv.getContext('2d'); c.scale(scale,scale);
+  var x=44, FULLW=W-2*x;
+  /* 背景 */
+  var g=c.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,'#0e3350'); g.addColorStop(.5,'#0a2236'); g.addColorStop(1,'#061522');
+  c.fillStyle=g; c.fillRect(0,0,W,H);
+  c.globalAlpha=.09; c.fillStyle='#2dd4bf';
+  c.beginPath(); c.arc(650,150,190,0,7); c.fill();
+  c.fillStyle='#f5c451'; c.beginPath(); c.arc(60,1240,150,0,7); c.fill();
+  c.globalAlpha=.14; c.font="96px 'Noto Color Emoji',serif"; c.fillText('🐟',596,236); c.globalAlpha=1;
+  /* 头部 */
+  c.textAlign='left'; c.textBaseline='alphabetic';
+  c.fillStyle='#f5c451'; c.font="bold 32px 'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif";
+  c.fillText('📍 路南 · 渔情预测',x,88);
+  c.fillStyle='#7ea6c4'; c.font="23px 'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif"; c.textAlign='right';
+  var title=((d.label==='昨天'||d.label==='今天')?d.label+' · ':'')+d.date.slice(5).replace('-','月')+'日 '+d.weekday;
+  c.fillText(clampText(c,title,300,23),W-x,88); c.textAlign='left';
+  /* 主卡（分数圆环 + 右侧信息） */
+  var y=118;
+  rr(c,x,y,FULLW,270,26); c.fillStyle='rgba(255,255,255,.06)'; c.fill();
+  c.strokeStyle='rgba(120,190,230,.25)'; c.lineWidth=1.5; c.stroke();
+  var cx=x+136, cy=y+135, r=92, sc=scoreColor(d.score);
+  c.lineWidth=16; c.lineCap='butt'; c.strokeStyle='rgba(255,255,255,.1)';
+  c.beginPath(); c.arc(cx,cy,r,0,Math.PI*2); c.stroke();
+  c.lineCap='round'; c.strokeStyle=sc;
+  c.beginPath(); c.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+Math.PI*2*d.score/100); c.stroke();
+  c.textAlign='center'; c.fillStyle=sc; c.font="bold 78px 'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif";
+  c.fillText(d.score,cx,cy+18);
+  c.fillStyle='#7ea6c4'; c.font="21px 'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif"; c.fillText('鱼情指数',cx,cy+54);
+  c.textAlign='left';
+  var rx=x+272, rw=W-x-rx;   // 右侧信息可用宽度
+  c.fillStyle=sc; c.font="bold 40px 'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif";
+  c.fillText(clampText(c,d.rating[1]+' · '+d.rating[0]+'级',rw,40),rx,y+66);
+  c.fillStyle='#dcecf8'; c.font="26px 'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif";
+  c.fillText(clampText(c,d.weather[1]+' '+d.weather[0]+' · '+d.tmin+'~'+d.tmax+'℃',rw,26),rx,y+112);
+  c.fillStyle='#a9c8de'; c.font="23px 'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif";
+  c.fillText(clampText(c,d.wind_dir+d.wind_level+'级 · 降水'+d.rain_sum+'mm',rw,23),rx,y+150);
+  c.fillText(clampText(c,'气压全日 '+(d.press_delta>0?'+':'')+d.press_delta+' hPa · 湿度'+d.hum_mean+'%',rw,23),rx,y+188);
+  y+=270+16;
+  /* 最佳窗口（全宽独立行，自动换行） */
+  c.fillStyle='#f5c451'; c.font="bold 24px 'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif";
+  var winTxt='⏰ 最佳窗口 '+d.best_windows.slice(0,2).map(function(w){
+    return w.label+'（'+w.score+'）';
+  }).join(' / ');
+  y=wrapText(c,winTxt,x,y,FULLW,34,24)+10;
+  /* 作钓建议 */
+  c.fillStyle='#ffd97a'; c.font="bold 26px 'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif";
+  c.fillText('📊 作钓建议',x,y); y+=40;
+  var advs=[];
+  advs.push(d.press_delta<=0?'气压下降，鱼活跃，宜主动钓底':'气压上升，鱼口趋缓，只抓早晚时段');
+  advs.push(d.wind_level<=3?'微风轻浪，选下风口溶氧高':'风较大，选背风湾、加大铅坠稳钓组');
+  advs.push('早晚钓浅（1.5-2米），午间钓深（3米+）');
+  if(d.rain_sum>0.5) advs.push('有降水溶氧足，小雨天反而好开口');
+  c.font="23px 'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif"; c.fillStyle='#c8dff0';
+  for(var i=0;i<advs.length;i++){
+    c.fillStyle='#2dd4bf'; c.fillText('•',x,y);
+    c.fillStyle='#c8dff0';
+    y=wrapText(c,advs[i],x+24,y,FULLW-24,34,23)+10;
+  }
+  y+=8;
+  /* 鱼种 TOP3 */
+  c.fillStyle='#ffd97a'; c.font="bold 26px 'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif";
+  c.fillText('🐟 鱼种参照 TOP3',x,y); y+=44;
+  var sp=d.species.slice(0,3);
+  for(var i=0;i<sp.length;i++){
+    var s0=sp[i];
+    rr(c,x,y,FULLW,64,14); c.fillStyle='rgba(255,255,255,.04)'; c.fill();
+    c.fillStyle='#e8f2fa'; c.font="bold 25px 'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif";
+    c.fillText(s0.name,x+20,y+42);
+    c.fillStyle=scoreColor(s0.score); c.font="22px 'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif";
+    var st=''; for(var k=0;k<5;k++) st+=k<s0.stars?'★':'☆';
+    c.fillText(st,x+118,y+42);
+    c.fillStyle=scoreColor(s0.score); c.font="bold 26px 'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif"; c.textAlign='right';
+    c.fillText(s0.score+'分',W-x-20,y+42); c.textAlign='left';
+    c.fillStyle='#8fb6d2'; c.font="20px 'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif";
+    c.fillText(clampText(c,s0.note,W-x-(x+250),20),x+250,y+42);
+    y+=76;
+  }
+  y+=10;
+  /* 近9日迷你图 */
+  c.fillStyle='#ffd97a'; c.font="bold 26px 'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif";
+  c.fillText('📅 近9日鱼情',x,y); y+=30;
+  var bw2=FULLW/9, maxH=120;
+  for(var i=0;i<DATA.days.length;i++){
+    var dd=DATA.days[i], bx=x+i*bw2, bh=Math.max(6,dd.score/100*maxH);
+    var by=y+maxH-bh;
+    c.fillStyle=scoreColor(dd.score);
+    c.globalAlpha=i===cur?1:.62;
+    rr(c,bx+8,by,bw2-16,bh,6); c.fill(); c.globalAlpha=1;
+    c.fillStyle=i===cur?'#2dd4bf':'#7ea6c4'; c.font="19px 'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif"; c.textAlign='center';
+    c.fillText(dd.label,bx+bw2/2,y+maxH+24);
+    c.fillStyle=i===cur?'#fff':'#8fb6d2'; c.font="bold 18px 'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif";
+    c.fillText(dd.score,bx+bw2/2,y+maxH+48);
+    c.textAlign='left';
+  }
+  y+=maxH+70;
+  /* 页脚 */
+  c.strokeStyle='rgba(255,255,255,.12)'; c.beginPath(); c.moveTo(x,y); c.lineTo(W-x,y); c.stroke();
+  c.fillStyle='#6f96b5'; c.font="19px 'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif";
+  c.fillText(clampText(c,'📍 唐山市路南区 融创湖岸壹号附近 · 数据源 Open-Meteo',FULLW,19),x,y+34);
+  c.fillText(clampText(c,'生成于 '+DATA.now+' · 指数为多因子模型估算，仅供参考',FULLW,19),x,y+62);
+  c.fillStyle='#f5c451'; c.font="bold 20px 'Noto Sans CJK SC','PingFang SC','Microsoft YaHei',sans-serif"; c.textAlign='center';
+  c.fillText(clampText(c,'📱 实时鱼情：htmlcode.fun/s/lunan-yuqing',W-2*x,20),W/2,y+100);
+  c.textAlign='left';
+  return cv;
+}
+function showPoster(){
+  var cv;
+  try{ cv=drawPoster(); }catch(e){ toast('生成图片失败：'+e.message,false); return; }
+  var url=cv.toDataURL('image/png');
+  document.getElementById('posterImg').src=url;
+  document.getElementById('posterModal').classList.add('show');
+  document.getElementById('posterDl').onclick=function(){
+    var a=document.createElement('a');
+    a.href=url; a.download='路南渔情_'+DATA.days[cur].date+'.png';
+    document.body.appendChild(a); a.click(); a.remove();
+  };
+}
+document.getElementById('savePosterBtn').addEventListener('click',showPoster);
+document.getElementById('posterClose').addEventListener('click',function(){
+  document.getElementById('posterModal').classList.remove('show');
+});
+document.getElementById('posterModal').addEventListener('click',function(e){
+  if(e.target===this) this.classList.remove('show');
+});
+
+/* ============================================================
+   实时刷新
+   ============================================================ */
+var toastTimer=null;
+function toast(msg,ok){
+  var el=document.getElementById('toast');
+  el.textContent=msg;
+  el.style.background=ok?'rgba(45,212,191,.92)':'rgba(251,146,60,.92)';
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(function(){el.classList.remove('show');},2600);
+}
+var refreshing=false;
+/* 本地实况风（wttr.in，km/h）→ 与模式当前小时风对比得校准系数；失败返回 null */
+var OBS_URL='https://wttr.in/Tangshan?format=%w';
+function fetchWindRatio(fcstNow){
+  if(!(fcstNow>0.5)) return Promise.resolve(null);
+  var ctrl=(typeof AbortController!=='undefined')?new AbortController():null;
+  var timer=ctrl?setTimeout(function(){ctrl.abort();},3500):null;
+  return fetch(OBS_URL,{cache:'no-store',signal:ctrl?ctrl.signal:undefined})
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
+    .then(function(txt){
+      var m=txt.match(/([\d.]+)\s*km\/h/i);
+      if(!m) return null;
+      var obs=parseFloat(m[1])/3.6;
+      if(!isFinite(obs)||obs<0||obs>=40) return null;
+      return Math.max(0.35,Math.min(1.0,obs/fcstNow));
+    })
+    .catch(function(){return null;})
+    .then(function(v){ if(timer) clearTimeout(timer); return v; });
+}
+function refreshData(manual){
+  if(refreshing) return;
+  refreshing=true;
+  var btn=document.getElementById('refreshBtn');
+  btn.classList.add('spin');
+  fetch(API_URL,{cache:'no-store'})
+    .then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.json(); })
+    .then(function(w){
+      /* 当前小时模式风 → 实况校准系数 */
+      var key=bjNow().date+'T'+('0'+bjNow().hour).slice(-2), fcst=null;
+      for(var i=0;i<w.hourly.time.length;i++){
+        if(w.hourly.time[i].slice(0,13)===key){ fcst=w.hourly.wind_speed_10m[i]; break; }
+      }
+      return fetchWindRatio(fcst).then(function(ratio){
+        var wr=ratio||(DATA&&DATA.wind_ratio)||0.55;
+        var nd=computeFromWeather(w,wr);
+        if(!nd) throw new Error('数据异常');
+        nd.wind_ratio=wr;
+        DATA=nd;
+        renderAll();
+        document.getElementById('updTime').innerHTML='<span class="live">'+nd.now+' · 实时</span>';
+        if(manual) toast('已更新至最新预报 '+nd.now.slice(11,16),true);
+      });
+    })
+    .catch(function(){
+      if(manual) toast('刷新失败，暂用内置快照数据',false);
+    })
+    .then(function(){
+      btn.classList.remove('spin'); refreshing=false;
+    });
+}
+document.getElementById('refreshBtn').addEventListener('click',function(){refreshData(true);});
+setInterval(function(){refreshData(false);},30*60*1000);            // 每30分钟自动刷新
+document.addEventListener('visibilitychange',function(){            // 回到前台时刷新
+  if(!document.hidden) refreshData(false);
+});
+
+/* ---------- 启动：先渲染快照，再拉实时 ---------- */
+renderAll();
+refreshData(false);
+</script>
+</body>
+</html>
